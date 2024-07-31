@@ -291,7 +291,7 @@ PET_norm <- function(mu_c,var_c,mu_e,var_e,m1,t1)
 #---------------9. find_m_t----------------
 # Given rmst data of interim and all, find the best m1,t1, m2,t2
 # n need to be given in this loop
-find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times, 
+find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times, search_step,
                      tar_a1, tar_pow1_low, tar_pow1_up, tar_a2, sim_size) {
   rmst_h0_int <- rmst_data[c(1,2) , ]
   rmst_h1_int <- rmst_data[c(3,4) , ]
@@ -299,7 +299,7 @@ find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times,
   rmst_h1_all <- rmst_data[c(3,4,7,8) , ]
   result_m1_t1 <- c()
   result_m1_t1 <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
-      m1 = m_low + i * 1/100
+      m1 = m_low + i * search_step
       result_t1 <- c()
       for (t1 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) 
          {
@@ -327,7 +327,7 @@ find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times,
   t1 <- bestmt[2]
   result_fin <- c()
   result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
-        m2 = m_low + i * 1/100
+        m2 = m_low + i * search_step
         opt_alpha <- 1
         opt_power <- 0
         opt_m2 <- 0
@@ -358,7 +358,9 @@ find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times,
     return(NULL)
   }
   else {
-    best_result <- result_fin[ , which.max(result_fin[4, ])] # most powerful result
+    powerful_fin <- result_fin[, which(result_fin[4,] == max(result_fin[4,]))]
+    best_result <- powerful_fin[, which(abs(powerful_fin[1,]) == min(abs(powerful_fin[1,] ))) ]
+     # most powerful result with smallest |m2|
     return(data.frame(m1 = m1,
                   t1 = t1,
                   PET0 = 1 - bestmt[3],
