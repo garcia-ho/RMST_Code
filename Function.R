@@ -309,48 +309,59 @@ find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times, search_step,
       {   # for simple RMST difference test, No second condition
         proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1))
         proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1))
-        if (proc_h0/sim_size > 0 && proc_h0/sim_size < tar_a1 &&
+        if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a1 &
               proc_h1/sim_size >= tar_pow1_low ) 
         {
           result_t1 <- c(m1,-Inf,proc_h0/sim_size,proc_h1/sim_size)         
         }
       }
 
-      else {
+      else 
+      {
         for (t1 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) 
         {
             proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > t1))
             proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > t1))
-            if (proc_h0/sim_size > 0 && proc_h0/sim_size < tar_a1 &&
+            if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a1 &
                 proc_h1/sim_size >= tar_pow1_low )
               {
               mark_c <- c(m1,t1,proc_h0/sim_size,proc_h1/sim_size)
               result_t1 <- cbind(result_t1,mark_c)   
               }    
         }
-          }
+      }
       result_t1
         }
 
-  powerful_m1_t1 <- result_m1_t1[, which(result_m1_t1[4,] == max(result_m1_t1[4,]))]
-  #Find the most powerful m1,t1
-  if (is.null(dim(powerful_m1_t1))) {
-      # Return NULL when something goes wrong
-      return(NULL)
-    }
-  bestmt <- powerful_m1_t1[, which(abs(powerful_m1_t1[1,]) == min(abs(powerful_m1_t1[1,] ))) ]
-  # Among these most powerful, find the m1 with smallest absolute value 
-  m1 <- bestmt[1]
-  t1 <- bestmt[2]  # t1 = -Inf when simple RMST difference test
 
-  result_fin <- c()
-  result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
-      m2 = m_low + i * search_step
-      opt_alpha <- 1
-      opt_power <- 0
-      opt_m2 <- 0
-      opt_t2 <- 0
-      opt_mt <- c()
+    powerful_m1_t1 <- result_m1_t1[, which(result_m1_t1[4,] == max(result_m1_t1[4,]))]
+    #Find the most powerful m1,t1
+    if (is.null(dim(powerful_m1_t1) & t_low != -Inf)) 
+      {
+      # Return NULL when something goes wrong
+        return(NULL)
+      }
+
+    if (t_low == -Inf)
+    {
+      bestmt <- powerful_m1_t1
+    }
+    else
+    {
+      bestmt <- powerful_m1_t1[, which(abs(powerful_m1_t1[1,]) == min(abs(powerful_m1_t1[1,] ))) ]
+    }
+    # Among these most powerful, find the m1 with smallest absolute value 
+    m1 <- bestmt[1]
+    t1 <- bestmt[2]  # t1 = -Inf when simple RMST difference test
+
+    result_fin <- c()
+    result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
+        m2 = m_low + i * search_step
+        opt_alpha <- 1
+        opt_power <- 0
+        opt_m2 <- 0
+        opt_t2 <- 0
+        opt_mt <- c()
 
       if (t1 == -Inf)
       {
@@ -390,13 +401,23 @@ find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times, search_step,
       opt_mt
       }
 
-  if (is.null(dim(result_fin))) {
+  if (is.null(dim(result_fin)) & t1 != -Inf) {
     # Return NULL when something goes wrong
     return(NULL)
   }
+  else if (is.null(dim(result_fin)) & t1 == -Inf) {
+    return ( 'Can not find any combination meet this overall alpha.')
+  }
   else {
     powerful_fin <- result_fin[, which(result_fin[4,] == max(result_fin[4,]))]
-    best_result <- powerful_fin[, which(abs(powerful_fin[1,]) == min(abs(powerful_fin[1,] ))) ]
+    if(t1 == -Inf)
+    {
+      best_result <- powerful_fin
+    }
+    else
+    {
+      best_result <- powerful_fin[, which(abs(powerful_fin[1,]) == min(abs(powerful_fin[1,] ))) ]
+    }
      # most powerful result with smallest |m2|
     return(data.frame(m1 = m1,
                   t1 = t1,
