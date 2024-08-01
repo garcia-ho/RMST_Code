@@ -67,6 +67,8 @@ RMST_sim_cal <- function(n,data_E,data_C,tau,sim_size)
 # It also counts the times of tau adjustment
 # This function can be used to compare our rejection method with classical RMST diff test 
 
+# It can return the test result over sim_size, tau adjustment proportion and p value of each test
+
 RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
 {
   # n is the sample size of each group
@@ -100,11 +102,13 @@ RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
           } else {
             test_res <- 0
           }
-        c(test_res,tau_adj_count)  # The last element of the 2nd row is tau_adj_count
+        c(test_res,tau_adj_count, p )  # The last element of the 2nd row is tau_adj_count
         }
-    
-    return(data.frame('Rejection' = sum(sim_result[1,])/sim_size, 
-                      'tau adjustment' = sim_result[2,sim_size]/sim_size)) 
+      
+    result <- list(test_result = data.frame('Rejection' = sum(sim_result[1, ]) / sim_size, 
+                                      'tau adjustment' = sim_result[2, sim_size] / sim_size),
+                  p_value = sim_result[3, ])
+    return(result) 
 }
 
 
