@@ -72,12 +72,12 @@ RMST_sim_cal <- function(n,data_E,data_C,tau,sim_size)
 
 
 
-#------ 3. RMST_two_sided_test-------
+#------ 3. RMST_sim_test-------
 # Different from RMST_sim_cal, It return a dataframe of two_sided RMST test rejection times over simulation times.
 # It also counts the times of tau adjustment
 # This function can be used to compare our rejection method with classical RMST diff test 
 
-RMST_two_sided_test <- function(n,data_E,data_C,tau,sim_size,alpha)
+RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
 {
   # n is the sample size of each group
   # sim_size is the times of simulation
@@ -89,19 +89,26 @@ RMST_two_sided_test <- function(n,data_E,data_C,tau,sim_size,alpha)
           
         if (tau < min(max(data_E[((k-1)*n+1):(k*n),1]),  max(data_C[((k-1)*n+1):(k*n),1]))) {
             rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = tau, alpha = alpha)
-          }  # the simulation data is not guaranteed to be larger than tau
-        else {
+            # the simulation data is not guaranteed to be larger than tau
+          }  else {
             rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], alpha = alpha)
             tau_adj_count <- tau_adj_count + 1   # tau is adjusted automatically
           }
-          
-        p <- rmst_result$unadjusted.result[1,4]  # The p value of RMST difference test. I think it's a two sided test
-          if ( p <= alpha ) {
-              test_res <- 1
-            }
-          else {
-              test_res <- 0
-            }
+        
+        if (sided == 'two_sided') {
+          p <- rmst_result$unadjusted.result[1,4]  
+          # The p value of RMST difference test. It's a two sided test in the package
+        } else if (sided == 'greater') {
+          diff <- rmst_result$unadjusted.result[1,1]
+          std <- (rmst_result$unadjusted.result[1,1] - result$unadjusted.result[1,2]) / qnorm(1 - alpha/2)
+          p <- 1 - pnorm(diff / std)
+        }
+
+        if ( p <= alpha ) {
+            test_res <- 1
+          } else {
+            test_res <- 0
+          }
         c(test_res,tau_adj_count)  # The last element of the 2nd row is tau_adj_count
         }
     
@@ -266,6 +273,8 @@ RMST_RSDST <- function(lambda,tau)
 
 
 
+
+
 #---------------8. PET_norm----------------
 # It returns c(PET0, PET1)
 # Input the RMST value and estimated variance of each group. and the critical value
@@ -284,6 +293,8 @@ PET_norm <- function(mu_c,var_c,mu_e,var_e,m1,t1)
     return(c(p_rj_h0,p_rj_h1))
     
 }
+
+
 
 
 
