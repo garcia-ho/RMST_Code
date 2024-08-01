@@ -1,17 +1,8 @@
-if (!require(survRM2)) install.packages('survRM2')
-library('survRM2')
-if (!require(mvtnorm)) install.packages('mvtnorm')
-library('mvtnorm')
-if (!require(survival)) install.packages('survival')
-library('survival')
-if (!require(nph)) install.packages('nph')
-library('nph')
-if (!require(foreach)) install.packages("foreach")
-library('foreach')
-if (!require(doParallel)) install.packages("doParallel")
-library('doParallel')
-if (!require(ggplot2)) install.packages("ggplot2")
-library('ggplot2')
+#—————————————————————————————————————————————————————
+# All functions used in this project are stored here!! |
+#—————————————————————————————————————————————————————
+
+
 
 
 #-------1. expo_gen---------
