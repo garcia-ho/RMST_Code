@@ -56,8 +56,7 @@ RMST_sim_cal <- function(n,data_E,data_C,tau,sim_size)
     # the simulation data is not guaranteed to be larger than tau
     if (tau < min(max(data_E[((k-1)*n+1):(k*n),1]),  max(data_C[((k-1)*n+1):(k*n),1]))) {  
         rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = tau) # No need for adjustment
-      }  
-    else {
+      }  else {
         rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3])
         # The rmst2 function will automatically adjust tau for us if it's not specified
       }
@@ -100,7 +99,8 @@ RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
           # The p value of RMST difference test. It's a two sided test in the package
         } else if (sided == 'greater') {
           diff <- rmst_result$unadjusted.result[1,1]
-          std <- (rmst_result$unadjusted.result[1,1] - result$unadjusted.result[1,2]) / qnorm(1 - alpha/2)
+          std <- (rmst_result$unadjusted.result[1,1] - 
+                  rmst_result$unadjusted.result[1,2]) / qnorm(1 - alpha/2)
           p <- 1 - pnorm(diff / std)
         }
 
@@ -150,18 +150,16 @@ log_rank_sim <- function(data_C,data_E,sim_size,n,alpha,sided)
   count_logrank <- foreach(k = 1:sim_size, .combine = '+', .packages = 'nph') %dopar% {
     pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
       p <- 0
-      if (sided == 'greater')
-        {
+      if (sided == 'greater') {
           p <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "greater")$test$p
-        }
-      else if (sided == 'two_sided')
-        {
+        } else if (sided == 'two_sided') {
           p <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "two.sided")$test$p
         }
     as.numeric(p <= alpha)  # The nominated alpha in the paper 
   }
     return(count_logrank/sim_size)
 }
+
 
 
 
@@ -183,8 +181,7 @@ expo_gen_2stages <- function(N,dist,acc_time,cen_time,lambda,HR1,HR2,arm,interim
 
 if (dist == 'exp') {
   survival_time_all <- rexp(N, rate = lambda)
-} 
-else if (dist == 'pcw_exp') { #piecewise exponential with one change time point
+} else if (dist == 'pcw_exp') { #piecewise exponential with one change time point
   survival_time_all <- rpwexp(n = N,fail_rate = data.frame(rate = c(lambda * HR1, lambda * HR2), 
                                             duration = c(change_time)))
 }
@@ -204,11 +201,9 @@ cal_event_int <- function(row) {
 
   if (entry_time_all >= interim) { # Not in the interim
     return(c(0,0))
-  }
-  else if (entry_time_all + min(survival_time_all, censor_time_int) < interim) {
+  } else if (entry_time_all + min(survival_time_all, censor_time_int) < interim) {
     return(c(min(survival_time_all, censor_time_int), 1))
-  } 
-  else if (entry_time_all + min(survival_time_all, censor_time_int) > interim &&
+  } else if (entry_time_all + min(survival_time_all, censor_time_int) > interim &&
            entry_time_all < interim) {
     return(c(interim - entry_time_all, 0))
   }
@@ -255,14 +250,12 @@ return(all_data[ ,c(5,6,7,8,9)])
 
 RMST_RSDST <- function(lambda,tau) 
 {
-    surv_fun <- function(t)
-        {
+    surv_fun <- function(t) {
              exp(-lambda * t)
         }
     RMST <- integrate(surv_fun, lower = 0, upper = tau)$value
     
-    E_x2_fun <- function(t)
-        {
+    E_x2_fun <- function(t) {
             t * exp(-lambda * t)
         }
     RSDST <- 2 * integrate(E_x2_fun, lower = 0, upper = tau)$value - RMST^2
