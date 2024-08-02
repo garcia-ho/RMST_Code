@@ -114,8 +114,6 @@ RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
 
 
 
-
-
 #--------- 4. emp_est -------
 # Estimate the empirical RMST and τ
 emp_est <- function(acc_time,cen_time,lambda_H0,lambda_H1)
@@ -292,16 +290,14 @@ PET_norm <- function(mu_c,var_c,mu_e,var_e,m1,t1)
 
 
 
-
-#------------------9. find_m_t------------------
+#------------------9. find_m_t_RMST------------------
 # Works for both Our RMST test and simple RMST difference test
 # Given rmst data of interim and all, find the best m1,t1, m2,t2
 # n need to be given in this loop
 # if t1, t2 is abandon, t_low need to be set as -Inf, It will only return m1,m2
 
-
 find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_step,
-                     tar_a1, tar_pow1_low, tar_pow1_up, tar_a2, sim_size) {
+                     tar_a1, tar_pow1_low, tar_a2, sim_size) {
   rmst_h0_int <- rmst_data[c(1,2) , ]
   rmst_h1_int <- rmst_data[c(3,4) , ]
   rmst_h0_all <- rmst_data[c(1,2,5,6) , ]
@@ -311,8 +307,7 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
       m1 = m_low + i * search_step
       result_t1 <- c()
 
-      if (t_low == -Inf) 
-      {   # for simple RMST difference test, No second condition
+      if (t_low == -Inf) {   # for simple RMST difference test, No second condition
         proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1))
         proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1))
         if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a1 &
@@ -321,11 +316,8 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
           result_t1 <- c(m1,-Inf,proc_h0/sim_size,proc_h1/sim_size)         
         }
       }
-
-      else 
-      {
-        for (t1 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) 
-        {
+      else {
+        for (t1 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) {
             proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > t1))
             proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > t1))
             if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a1 &
@@ -339,21 +331,17 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
       result_t1
         }
 
-
     powerful_m1_t1 <- result_m1_t1[, which(result_m1_t1[4,] == max(result_m1_t1[4,]))]
     #Find the most powerful m1,t1
-    if (is.null(dim(powerful_m1_t1) & t_low != -Inf)) 
-      {
+    if (is.null(dim(powerful_m1_t1) & t_low != -Inf)) {
       # Return NULL when something goes wrong
         return(NULL)
       }
 
-    if (t_low == -Inf)
-    {
+    else if (t_low == -Inf) {
       bestmt <- powerful_m1_t1
     }
-    else
-    {
+    else {
       bestmt <- powerful_m1_t1[, which(abs(powerful_m1_t1[1,]) == min(abs(powerful_m1_t1[1,] ))) ]
     }
     # Among these most powerful, find the m1 with smallest absolute value 
@@ -369,14 +357,12 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
         opt_t2 <- 0
         opt_mt <- c()
 
-      if (t1 == -Inf)
-      {
+      if (t1 == -Inf) {
         proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) &
                        (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2))
         proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & 
                        (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2))
-        if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power)
-              {
+        if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) {
                 opt_alpha <- proc_h0/sim_size
                 opt_power <- proc_h1/sim_size
                 opt_m2 <- m2
@@ -384,18 +370,15 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
                 opt_mt <- c(opt_m2,opt_t2,opt_alpha,opt_power)
               }
       }
-      else
-      {
-        for (t2 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) 
-          {
+      else {
+        for (t2 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) {
             proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) & (rmst_h0_all[2, ] > t1) &
                           (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2) & (rmst_h0_all[4, ] > t2))
             
             proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & (rmst_h1_all[2, ] > t1) &
                           (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2) & (rmst_h1_all[4, ] > t2))
         # return the best 
-            if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) 
-              {
+            if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) {
                 opt_alpha <- proc_h0/sim_size
                 opt_power <- proc_h1/sim_size
                 opt_m2 <- m2
@@ -437,6 +420,74 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
   }
 }
 
+
+
+
+#------------------10. find_m_logrank------------------
+# Similar to find_m_t_RMST, this one is for log rank test 2 stages design
+# The z statistics (W/sigma) in logrank test of each simulation is required as an input
+# The z statistics can be obtained by log_rank_sim function $ z_stats
+# This function help you find the Z1 > m1 & Z > m2 to control the overall power.
+# You need to tune tar_a1 and tar_pow1_low to control PET0 and PET1
+
+find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
+                          tar_a1, tar_pow1_low, tar_a2, sim_size) {
+  z_stats_h0_int <-  logrank_data[1, ]
+  z_stats_h1_int <-  logrank_data[2, ]
+  z_stats_h0_all <-  logrank_data[c(1, 3), ]
+  z_stats_h1_all <-  logrank_data[c(2, 4), ]          
+  result_m1 <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
+      m1 = m_low + i * search_step
+      result_t1 <- c()
+      proc_h0 <- sum(z_stats_h0_int > m1)
+      proc_h1 <- sum(z_stats_h1_int > m1)
+      if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a1 &
+          proc_h1/sim_size >= tar_pow1_low ) 
+        {
+          result_t1 <- c(m1,proc_h0/sim_size,proc_h1/sim_size)         
+        }
+      result_t1
+      }
+  powerful_m1 <- result_m1[, which(result_m1[3,] == max(result_m1[3,]))]
+    #Find the most powerful m1,t1
+  if (is.null(powerful_m1[1])) 
+    {   # Return NULL when something goes wrong
+      return(NULL)
+    }
+  bestmt <- powerful_m1
+  m1 <- bestmt[1]
+  result_fin <- c()
+  result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
+      m2 = m_low + i * search_step
+      opt_alpha <- 1
+      opt_power <- 0
+      opt_m2 <- 0
+      opt_mt <- c()
+      proc_h0 <- sum((z_stats_h0_all[1, ] > m1) & (z_stats_h0_all[2, ]  > m2))
+      proc_h1 <- sum((z_stats_h1_all[1, ] > m1) & (z_stats_h1_all[2, ]  > m2))
+      if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) {
+          opt_alpha <- proc_h0/sim_size
+          opt_power <- proc_h1/sim_size
+          opt_m2 <- m2
+          opt_mt <- c(opt_m2,opt_alpha,opt_power)
+        }
+      opt_mt
+  }
+  if (is.null(result_fin[1])) {
+    # Return NULL when something goes wrong
+    return(NULL)
+  }
+  else {
+     powerful_fin <- result_fin[, which(result_fin[3,] == max(result_fin[3,]))]
+     return(data.frame(m1 = m1,
+                  PET0 = 1 - bestmt[2],
+                  PET1 = 1 - bestmt[3],
+                  m2 = powerful_fin[1],
+                  alpha = powerful_fin[2],
+                  Power = powerful_fin[3]
+                  ))
+  }
+}
 
 
 
