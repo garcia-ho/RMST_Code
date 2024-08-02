@@ -142,17 +142,23 @@ log_rank_sim <- function(data_C,data_E,sim_size,n,alpha,sided)
 {
   # n is the sample size of each group
   # sim_size is the times of simulation
-  count_logrank <- foreach(k = 1:sim_size, .combine = '+', .packages = 'nph') %dopar% {
+  logrank_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'nph') %dopar% {
     pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
-      p <- 0
-      if (sided == 'greater') {
-          p <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "greater")$test$p
-        } else if (sided == 'two_sided') {
-          p <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "two.sided")$test$p
-        }
-    as.numeric(p <= alpha)  # The nominated alpha in the paper 
+    if (sided == 'greater') {
+        result <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "greater")
+      } 
+    else if (sided == 'two_sided') {
+        result <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "two.sided")
+      }
+    p <- result$test$p
+    z_stats <- result$test$z  # return the z statistics for two stages trials
+    c(p, z_stats)
+      # The nominated alpha in the paper 
   }
-    return(count_logrank/sim_size)
+  
+  return(list(rejection = sum(logrank_result[1, ] <= alpha) / sim_size, # rejection times
+              z_stats = logrank_result[2, ])
+        )  # the z statistics W/sigma of every simulation
 }
 
 
@@ -294,7 +300,7 @@ PET_norm <- function(mu_c,var_c,mu_e,var_e,m1,t1)
 # if t1, t2 is abandon, t_low need to be set as -Inf, It will only return m1,m2
 
 
-find_m_t <- function(m_low, t_low, t_up, rmst_data, search_times, search_step,
+find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_step,
                      tar_a1, tar_pow1_low, tar_pow1_up, tar_a2, sim_size) {
   rmst_h0_int <- rmst_data[c(1,2) , ]
   rmst_h1_int <- rmst_data[c(3,4) , ]
