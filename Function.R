@@ -338,7 +338,7 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
         return(NULL)
       }
 
-    else if (t_low == -Inf) {
+    else if (t_low == -Inf | class(powerful_m1_t1)[1] == 'numeric') {
       bestmt <- powerful_m1_t1
     }
     else {
@@ -373,8 +373,7 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
       else {
         for (t2 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) {
             proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) & (rmst_h0_all[2, ] > t1) &
-                          (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2) & (rmst_h0_all[4, ] > t2))
-            
+                          (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2) & (rmst_h0_all[4, ] > t2))     
             proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & (rmst_h1_all[2, ] > t1) &
                           (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2) & (rmst_h1_all[4, ] > t2))
         # return the best 
@@ -394,17 +393,12 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
     # Return NULL when something goes wrong
     return(NULL)
   }
-  else if (is.null(dim(result_fin)) & t1 == -Inf) {
-    return ( 'Can not find any combination meet this overall alpha.')
-  }
   else {
     powerful_fin <- result_fin[, which(result_fin[4,] == max(result_fin[4,]))]
-    if(t1 == -Inf)
-    {
+    if (t1 == -Inf | class(powerful_fin)[1] == 'numeric') {
       best_result <- powerful_fin
     }
-    else
-    {
+    else {
       best_result <- powerful_fin[, which(abs(powerful_fin[1,]) == min(abs(powerful_fin[1,] ))) ]
     }
      # most powerful result with smallest |m2|
@@ -450,7 +444,7 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
       }
   powerful_m1 <- result_m1[, which(result_m1[3,] == max(result_m1[3,]))]
     #Find the most powerful m1,t1
-  if (is.null(powerful_m1[1])) 
+  if (is.null(dim(powerful_m1))) 
     {   # Return NULL when something goes wrong
       return(NULL)
     }
@@ -473,20 +467,24 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
         }
       opt_mt
   }
-  if (is.null(result_fin[1])) {
+  if (is.null(dim(result_fin))) {
     # Return NULL when something goes wrong
     return(NULL)
   }
+  else if (class(result_fin)[1] == 'numeric') {
+      powerful_fin <- result_fin
+    }
   else {
-     powerful_fin <- result_fin[, which(result_fin[3,] == max(result_fin[3,]))]
-     return(data.frame(m1 = m1,
+      powerful_fin <- result_fin[, which(result_fin[3,] == max(result_fin[3,]))]
+    }
+  return(data.frame(m1 = m1,
                   PET0 = 1 - bestmt[2],
                   PET1 = 1 - bestmt[3],
                   m2 = powerful_fin[1],
                   alpha = powerful_fin[2],
                   Power = powerful_fin[3]
                   ))
-  }
+  
 }
 
 
