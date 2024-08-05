@@ -67,7 +67,6 @@ RMST_sim_cal <- function(n,data_E,data_C,tau,sim_size)
 # Different from RMST_sim_cal, It return a dataframe of two_sided RMST test rejection times over simulation times.
 # It also counts the times of tau adjustment
 # This function can be used to compare our rejection method with classical RMST diff test 
-
 # It can return the test result over sim_size, tau adjustment proportion and p value of each test
 
 RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
@@ -106,7 +105,7 @@ RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
         c(test_res,tau_adj_count, p )  # The last element of the 2nd row is tau_adj_count
         }
       
-    result <- list(test_result = data.frame('Rejection' = sum(sim_result[1, ]) / sim_size, 
+    result <- list(test_result = data.frame('rejection' = sum(sim_result[1, ]) / sim_size, 
                                       'tau adjustment' = sim_result[2, sim_size] / sim_size),
                   p_value = sim_result[3, ])
     return(result) 
@@ -220,7 +219,7 @@ cal_event_fin <- function(row) {
   censor_time_fin <- row[3]
   obs_time_int <- row[5]
   event_int <- row[6]
-if(entry_time_all > interim) {  # censoring in stage II
+if(entry_time_all >= interim) {  # censoring in stage II
   return(c(min(survival_time_all,censor_time_fin), 
           as.integer(survival_time_all <= censor_time_fin)))
 }
