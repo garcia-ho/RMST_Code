@@ -8,6 +8,7 @@
 # It returns an (N * 3 * 2) array : obs_survival_int, event_int, obs_survival_fin, event_fin, arm  
 # 3 columns are: obs_survival, event, arm  
 # If interim is a c(), result[, , i] is the result of ith interim (N * 5)
+
   # N: Number of patients
   # acc_time: Accrual time period with constant rate
   # lambda: for exponential distribution
