@@ -1,182 +1,21 @@
 #—————————————————————————————————————————————————————
-# All functions used in this project are stored here!! |
+# All functions used in this project are stored here!! 
 #—————————————————————————————————————————————————————
 
-
-
-
-#-------1. expo_gen---------    **** This function is replaced by expo_gen_2stages : interim = 0
-#
-# Generate survival data under exponential dist
-# Return a (N * 3) matrix c(obs_survival, event, arm)
-expo_gen <- function(N,acc_time,lambda,cen_time,arm)
-{
-  # N: Number of patients
-  # acc_time: Accrual time period with constant rate
-  # lambda: for exponential distribution
-  # cen_time: extra censoring period after accrual period
-  # arm: group label()
-
-  accrual_times <- runif(N, min = 0, max = acc_time)
-  # Survival time from exponential distribution
-  survival_time <- rexp(N, rate = lambda)
-  # uniform censoring after accrual period
-  censor_time <- runif(N, min = cen_time, max = acc_time + cen_time)
-  # Observed survival time is the minimum of survival_time and censor_time
-  obs_survival <- array(pmin(survival_time, censor_time))
-  # Event indicator: 1 if the event (death) happened, 0 otherwise
-  event <- as.integer(survival_time <= censor_time)
-  arm <- array(c(arm),dim = c(N,1))
-  sur_data <- array(c(obs_survival,event,arm),dim = c(N,3))
-  return(sur_data)
-}
-
-
-
-
-#------ 2. RMST_sim_cal-------
-# Generate Survival function and calculate the RMST of each arm.
-# It returns 2 * sim_size matrix. First row control, second one experiment. sim_size is the times of simulation
-# The out put of this function is array to accelerate the grid search code.
-
-RMST_sim_cal <- function(n,data_E,data_C,tau,sim_size)
-{
-  # n is the sample size of each group
-  # sim_size is the times of simulation
-  sim_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'survRM2') %dopar% {
-    pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
-    # the simulation data is not guaranteed to be larger than tau
-    if (tau < min(max(data_E[((k-1)*n+1):(k*n),1]),  max(data_C[((k-1)*n+1):(k*n),1]))) {  
-        rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = tau) # No need for adjustment
-      }  else {
-        rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3])
-        # The rmst2 function will automatically adjust tau for us if it's not specified
-      }
-
-    c(rmst_result$RMST.arm0$rmst[1],rmst_result$RMST.arm1$rmst[1])
-    }
-    
-    return(sim_result)
-}
-
-
-
-
-
-#------ 3. RMST_sim_test-------
-# Different from RMST_sim_cal, It return a dataframe of two_sided RMST test rejection times over simulation times.
-# It also counts the times of tau adjustment
-# This function can be used to compare our rejection method with classical RMST diff test 
-# It can return the test result over sim_size, tau adjustment proportion and p value of each test
-
-RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
-{
-  # n is the sample size of each group
-  # sim_size is the times of simulation
-    tau_adj_count <- 0
-    sim_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'survRM2') %dopar% {
-          test_res <- 0
-          p <- 0
-          pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
-          
-        if (tau < min(max(data_E[((k-1)*n+1):(k*n),1]),  max(data_C[((k-1)*n+1):(k*n),1]))) {
-            rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = tau, alpha = alpha)
-            # the simulation data is not guaranteed to be larger than tau
-          }  else {
-            rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], alpha = alpha)
-            tau_adj_count <- tau_adj_count + 1   # tau is adjusted automatically
-          }
-        
-        if (sided == 'two_sided') {
-          p <- rmst_result$unadjusted.result[1,4]  
-          # The p value of RMST difference test. It's a two sided test in the package
-        } else if (sided == 'greater') {
-          diff <- rmst_result$unadjusted.result[1,1]
-          std <- (rmst_result$unadjusted.result[1,1] - 
-                  rmst_result$unadjusted.result[1,2]) / qnorm(1 - alpha/2)
-          p <- 1 - pnorm(diff / std)
-        }
-
-        if ( p <= alpha ) {
-            test_res <- 1
-          } else {
-            test_res <- 0
-          }
-        c(test_res,tau_adj_count, p )  # The last element of the 2nd row is tau_adj_count
-        }
-      
-    result <- list(test_result = data.frame('rejection' = sum(sim_result[1, ]) / sim_size, 
-                                      'tau adjustment' = sim_result[2, sim_size] / sim_size),
-                  p_value = sim_result[3, ])
-    return(result) 
-}
-
-
-
-
-#--------- 4. emp_est -------
-# Estimate the empirical RMST and τ
-emp_est <- function(acc_time,cen_time,lambda_H0,lambda_H1)
-# estimate the empirical RMST under H1 (hazard ratio), and the tau
-  {
-  sur_0 <- expo_gen(N = 10000,acc_time = acc_time, lambda = lambda_H0, cen_time = cen_time,arm = 0)
-  sur_1 <- expo_gen(N = 10000,acc_time = acc_time, lambda = lambda_H1, cen_time = cen_time,arm = 1)
-  est_tau <- mean(sur_0[1,]) + 3 * sd(sur_0[1,])
-  pre_data <- rbind(sur_0,sur_1)
-  rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = est_tau)
-  emp_rmst <- c(rmst_result$RMST.arm0$result['RMST','Est.'],rmst_result$RMST.arm1$result['RMST','Est.'])
-
-  return (c(emp_rmst[1],emp_rmst[2],est_tau))
-  }
-
-
-
-
-
-#----------5. log_rank_sim --------
-# For one-sided log rank test simulation. Return the simulated alpha
-
-log_rank_sim <- function(data_C,data_E,sim_size,n,alpha,sided)
-{
-  # n is the sample size of each group
-  # sim_size is the times of simulation
-  logrank_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'nph') %dopar% {
-    pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
-    if (sided == 'greater') {
-        result <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "greater")
-      } 
-    else if (sided == 'two_sided') {
-        result <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "two.sided")
-      }
-    p <- result$test$p
-    z_stats <- result$test$z  # return the z statistics for two stages trials
-    c(p, z_stats)
-      # The nominated alpha in the paper 
-  }
-  
-  return(list(rejection = sum(logrank_result[1, ] <= alpha) / sim_size, # rejection times
-              z_stats = logrank_result[2, ])
-        )  # the z statistics W/sigma of every simulation
-}
-
-
-
-
-
-#---------- 6. expo_gen_2stages------------
+#-------------- 1. expo_gen_2stages------------
 # Generate exponential dist survival data for 2 stages test.
 # The censoring distribution in interim period is different from the whole trail 
 # It returns an (N * 3 * 2) array : obs_survival_int, event_int, obs_survival_fin, event_fin, arm  
 # 3 columns are: obs_survival, event, arm  
 # If interim is a c(), result[, , i] is the result of ith interim (N * 5)
-
-expo_gen_2stages <- function(N,dist,acc_time,cen_time,lambda,HR1,HR2,arm,interim,change_time)
-{
   # N: Number of patients
   # acc_time: Accrual time period with constant rate
   # lambda: for exponential distribution
   # cen_time: extra censoring period after accrual period
   # arm: group label()
+
+expo_gen_2stages <- function(N,dist,acc_time,cen_time,lambda,HR1,HR2,arm,interim,change_time)
+{
 
 if (dist == 'exp') {
   survival_time_all <- rexp(N, rate = lambda)
@@ -233,25 +72,149 @@ if (length(interim) == 1) {
    obs_event_fin <- apply(sur_data_int, 1, cal_event_fin) 
    all_data <- cbind(sur_data_int,t(obs_event_fin)) 
    return(all_data[ ,c(4,5,6,7,8)])
-    # In all_data 4th column is arm
-    # 5th obs_time_int, 6th event_int
-    # 7th obs_time_fin, 8th event_fin
+# In all_data 4th column is arm, 5th obs_time_int, 6th event_int, 7th obs_time_fin, 8th event_fin
 }
 
-else {  # interim is a c() it return different interim event 
+else 
+  {  # interim is a c() it return different interim event 
     result <- array(NA, dim = c(N , 5, length(interim)))
-    i <- 1
-   for (interim_val in interim) {
-    obs_event_int <- apply(all_data, 1, cal_event_int)
-    sur_data_int <- cbind(all_data,t(obs_event_int))
-    obs_event_fin <- apply(sur_data_int, 1, cal_event_fin) 
-    result[ , , i] <- cbind(sur_data_int,t(obs_event_fin))[ ,c(4,5,6,7,8)]
-    i = i + 1
-   }
+    result <- foreach(i = 1:length(interim), .combine = 'abind', .multicombine = TRUE,
+                     .init = array(NA, dim = c(N, 5, 0)), .packages = c("abind")) %dopar% 
+      {
+        interim_val <- interim[i]
+        obs_event_int <- apply(all_data, 1, cal_event_int)
+        sur_data_int <- cbind(all_data,t(obs_event_int))
+        obs_event_fin <- apply(sur_data_int, 1, cal_event_fin) 
+        array(cbind(sur_data_int,t(obs_event_fin))[ ,c(4,5,6,7,8)], dim = c(N, 5, 1))
+      }
    return(result)
+  }
 }
 
+
+
+
+
+#------ 2. RMST_sim_cal-------
+# Generate Survival function and calculate the RMST of each arm.
+# It returns 2 * sim_size matrix. First row control, second one experiment. sim_size is the times of simulation
+# The out put of this function is array to accelerate the grid search code.
+
+RMST_sim_cal <- function(n,data_E,data_C,tau,sim_size)
+{
+  # n is the sample size of each group
+  # sim_size is the times of simulation
+  sim_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'survRM2') %dopar% {
+    pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
+    # the simulation data is not guaranteed to be larger than tau
+    if (tau < min(max(data_E[((k-1)*n+1):(k*n),1]),  max(data_C[((k-1)*n+1):(k*n),1]))) {  
+        rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = tau) # No need for adjustment
+      }  else {
+        rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3])
+        # The rmst2 function will automatically adjust tau for us if it's not specified
+      }
+    c(rmst_result$RMST.arm0$rmst[1],rmst_result$RMST.arm1$rmst[1])
+    }
+    
+    return(sim_result)
 }
+
+
+
+
+
+#------ 3. RMST_sim_test-------
+# Different from RMST_sim_cal, It return a dataframe of two_sided RMST test rejection times over simulation times.
+# It also counts the times of tau adjustment
+# This function can be used to compare our rejection method with classical RMST diff test 
+# It can return the test result over sim_size, tau adjustment proportion and p value of each test
+
+RMST_sim_test <- function(n, data_E, data_C, tau, sim_size, alpha, sided)
+{
+  # n is the sample size of each group
+  # sim_size is the times of simulation
+    tau_adj_count <- 0
+    sim_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'survRM2') %dopar% {
+          test_res <- 0
+          p <- 0
+          pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
+          
+        if (tau < min(max(data_E[((k-1)*n+1):(k*n),1]),  max(data_C[((k-1)*n+1):(k*n),1]))) {
+            rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = tau, alpha = alpha)
+            # the simulation data is not guaranteed to be larger than tau
+          }  else {
+            rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], alpha = alpha)
+            tau_adj_count <- tau_adj_count + 1   # tau is adjusted automatically
+          }
+        
+        if (sided == 'two_sided') {
+          p <- rmst_result$unadjusted.result[1,4]  
+          # The p value of RMST difference test. It's a two sided test in the package
+          } else if (sided == 'greater') {
+          diff <- rmst_result$unadjusted.result[1,1]
+          std <- (rmst_result$unadjusted.result[1,1] - 
+                  rmst_result$unadjusted.result[1,2]) / qnorm(1 - alpha/2)
+          p <- 1 - pnorm(diff / std)
+          }
+        if ( p <= alpha ) {
+            test_res <- 1
+          } else {
+            test_res <- 0
+          }
+        c(test_res,tau_adj_count, p )  # The last element of the 2nd row is tau_adj_count
+        }
+
+    return(list(test_result = data.frame('rejection' = sum(sim_result[1, ]) / sim_size, 
+                                      'tau adjustment' = sim_result[2, sim_size] / sim_size),
+                  p_value = sim_result[3, ])) 
+}
+
+
+
+
+#--------- 4. emp_est -------
+# Estimate the empirical RMST and τ
+emp_est <- function(acc_time,cen_time,lambda_H0,lambda_H1)
+# estimate the empirical RMST under H1 (hazard ratio), and the tau
+  {
+  sur_0 <- expo_gen(N = 10000,acc_time = acc_time, lambda = lambda_H0, cen_time = cen_time,arm = 0)
+  sur_1 <- expo_gen(N = 10000,acc_time = acc_time, lambda = lambda_H1, cen_time = cen_time,arm = 1)
+  est_tau <- mean(sur_0[1,]) + 3 * sd(sur_0[1,])
+  pre_data <- rbind(sur_0,sur_1)
+  rmst_result <- rmst2(pre_data[,1], pre_data[,2], pre_data[,3], tau = est_tau)
+  emp_rmst <- c(rmst_result$RMST.arm0$result['RMST','Est.'],rmst_result$RMST.arm1$result['RMST','Est.'])
+
+  return (c(emp_rmst[1],emp_rmst[2],est_tau))
+  }
+
+
+
+
+
+#----------5. log_rank_sim --------
+# For one-sided log rank test simulation. Return the simulated alpha
+
+log_rank_sim <- function(data_C,data_E,sim_size,n,alpha,sided)
+{
+  # n is the sample size of each group
+  # sim_size is the times of simulation
+  logrank_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'nph') %dopar% {
+    pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
+    if (sided == 'greater') {
+        result <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "greater")
+      } 
+    else if (sided == 'two_sided') {
+        result <- logrank.test(pre_data[,1],pre_data[,2],pre_data[,3],alternative = "two.sided")
+      }
+    p <- result$test$p
+    z_stats <- result$test$z  # return the z statistics for two stages trials
+    c(p, z_stats)
+  }
+  return(list(rejection = sum(logrank_result[1, ] <= alpha) / sim_size, # rejection times
+              z_stats = logrank_result[2, ]))  # the z statistics W/sigma of every simulation
+}
+
+
 
 
 
@@ -360,7 +323,8 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
     t1 <- bestmt[2]  # t1 = -Inf when simple RMST difference test
 
     result_fin <- c()
-    result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
+    result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% 
+      { 
         m2 = m_low + i * search_step
         opt_alpha <- 1
         opt_power <- 0
@@ -368,43 +332,50 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
         opt_t2 <- 0
         opt_mt <- c()
 
-      if (t1 == -Inf) {
-        proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) &
-                       (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2))
-        proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & 
-                       (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2))
-        if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) {
-                opt_alpha <- proc_h0/sim_size
-                opt_power <- proc_h1/sim_size
-                opt_m2 <- m2
-                opt_t2 <- -Inf
-                opt_mt <- c(opt_m2,opt_t2,opt_alpha,opt_power)
-              }
-      }
-      else {
-        for (t2 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) {
-            proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) & (rmst_h0_all[2, ] > t1) &
-                          (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2) & (rmst_h0_all[4, ] > t2))     
-            proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & (rmst_h1_all[2, ] > t1) &
-                          (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2) & (rmst_h1_all[4, ] > t2))
-        # return the best 
-            if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) {
-                opt_alpha <- proc_h0/sim_size
-                opt_power <- proc_h1/sim_size
-                opt_m2 <- m2
-                opt_t2 <- t2
-                opt_mt <- c(opt_m2,opt_t2,opt_alpha,opt_power)
-              }
-          }
-      }
+        if (t1 == -Inf) 
+          {
+            proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) &
+                          (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2))
+            proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & 
+                          (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2))
+            if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & 
+                proc_h1/sim_size >= opt_power) 
+                {
+                  opt_alpha <- proc_h0/sim_size
+                  opt_power <- proc_h1/sim_size
+                  opt_m2 <- m2
+                  opt_t2 <- -Inf
+                  opt_mt <- c(opt_m2,opt_t2,opt_alpha,opt_power)
+                }
+            }
+      else 
+        {
+          for (t2 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) 
+            {
+              proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) & (rmst_h0_all[2, ] > t1) &
+                            (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2) & (rmst_h0_all[4, ] > t2))     
+              proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & (rmst_h1_all[2, ] > t1) &
+                            (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2) & (rmst_h1_all[4, ] > t2))
+                  # return the best 
+              if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) 
+                {
+                  opt_alpha <- proc_h0/sim_size
+                  opt_power <- proc_h1/sim_size
+                  opt_m2 <- m2
+                  opt_t2 <- t2
+                  opt_mt <- c(opt_m2,opt_t2,opt_alpha,opt_power)
+                }
+            }
+        }
       opt_mt
       }
 
-  if (is.null(dim(result_fin)) & t1 != -Inf) {
-    # Return NULL when something goes wrong
-    return(NULL)
-  }
-  else {
+  if (is.null(dim(result_fin)) & t1 != -Inf) 
+    {
+      return(NULL)    # Return NULL when something goes wrong
+    }
+  else 
+    {
     powerful_fin <- result_fin[, which(result_fin[4,] == max(result_fin[4,]))]
     if (t1 == -Inf | class(powerful_fin)[1] == 'numeric') {
       best_result <- powerful_fin
@@ -422,7 +393,7 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
                   alpha = best_result[3],
                   Power = best_result[4]
                   ))
-  }
+    }
 }
 
 
@@ -478,14 +449,16 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
         }
       opt_mt
   }
-  if (is.null(dim(result_fin))) {
-    # Return NULL when something goes wrong
-    return(NULL)
-  }
-  else if (class(result_fin)[1] == 'numeric') {
+  if (is.null(dim(result_fin))) 
+    {
+      return(NULL)
+    }
+  else if (class(result_fin)[1] == 'numeric') 
+    {
       powerful_fin <- result_fin
     }
-  else {
+  else 
+    {
       powerful_fin <- result_fin[, which(result_fin[3,] == max(result_fin[3,]))]
     }
   return(data.frame(m1 = m1,
@@ -495,7 +468,6 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
                   alpha = powerful_fin[2],
                   Power = powerful_fin[3]
                   ))
-  
 }
 
 
