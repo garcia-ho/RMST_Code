@@ -168,7 +168,7 @@ log_rank_sim <- function(data_C,data_E,sim_size,n,alpha,sided)
 # The censoring distribution in interim period is different from the whole trail 
 # It returns an (N * 3 * 2) array : obs_survival_int, event_int, obs_survival_fin, event_fin, arm  
 # 3 columns are: obs_survival, event, arm  
-# [, , 1] is for interim and [, , 2] is for the whole trial
+# If interim is a c(), result[, , i] is the result of ith interim (N * 5)
 
 expo_gen_2stages <- function(N,dist,acc_time,cen_time,lambda,HR1,HR2,arm,interim,change_time)
 {
@@ -188,30 +188,23 @@ if (dist == 'exp') {
 arm_all <- rep(arm, N)
 entry_time_all <- runif(N, min = 0, max = acc_time)
 censor_time_fin <- runif(N, min = cen_time, max = acc_time + cen_time)
-# merge all 4 columns above
 all_data <- cbind(survival_time_all, entry_time_all, censor_time_fin, arm_all)
 
+# _______________________Define function for event counting________________________________
 # filter the sample die before interim
 cal_event_int <- function(row) { 
   survival_time_all <- row[1]
   censor_time_fin <- row[3]
   entry_time_all <- row[2]
-
-  if (entry_time_all >= interim) { # Not in the interim
+  if (entry_time_all >= interim_val) { # Not in the interim
     return(c(0,0))
-  } else if (entry_time_all + min(survival_time_all, censor_time_fin) < interim) {
+  } else if (entry_time_all + min(survival_time_all, censor_time_fin) < interim_val) {
     return(c(min(survival_time_all, censor_time_fin), 1))
-  } else if (entry_time_all + min(survival_time_all, censor_time_fin) > interim &&
-           entry_time_all < interim) {
-    return(c(interim - entry_time_all, 0))
+  } else if (entry_time_all + min(survival_time_all, censor_time_fin) > interim_val &&
+           entry_time_all < interim_val) {
+    return(c(interim_val - entry_time_all, 0))
   }
 }
-
-# Apply the custom function to each column (patient) of the data
-obs_event_int <- apply(all_data, 1, cal_event_int)
-sur_data_int <- cbind(all_data,t(obs_event_int)) 
-# The 5th column is obs_time_int, the 6th is the event_int
-
 # calculate the event in final study
 cal_event_fin <- function(row) { 
   survival_time_all <- row[1]
@@ -219,7 +212,7 @@ cal_event_fin <- function(row) {
   censor_time_fin <- row[3]
   obs_time_int <- row[5]
   event_int <- row[6]
-if(entry_time_all >= interim) {  # censoring in stage II
+if(entry_time_all >= interim_val) {  # censoring in stage II
   return(c(min(survival_time_all,censor_time_fin), 
           as.integer(survival_time_all <= censor_time_fin)))
 }
@@ -231,16 +224,34 @@ else {
   return(c(obs_time_int,event_int))
 }
 }
+#_________________________________________________________________
 
-obs_event_fin <- apply(sur_data_int, 1, cal_event_fin)
-all_data <- cbind(sur_data_int,t(obs_event_fin)) 
- # In all_data 4th column is arm
- #             5th obs_time_int, 6th event_int
- #             7th obs_time_fin, 8th event_fin
-
-return(all_data[ ,c(4,5,6,7,8)])
+if (length(interim) == 1) {
+    interim_val <- interim
+   obs_event_int <- apply(all_data, 1, cal_event_int)
+   sur_data_int <- cbind(all_data,t(obs_event_int))
+   obs_event_fin <- apply(sur_data_int, 1, cal_event_fin) 
+   all_data <- cbind(sur_data_int,t(obs_event_fin)) 
+   return(all_data[ ,c(4,5,6,7,8)])
+    # In all_data 4th column is arm
+    # 5th obs_time_int, 6th event_int
+    # 7th obs_time_fin, 8th event_fin
 }
 
+else {  # interim is a c() it return different interim event 
+    result <- array(NA, dim = c(N , 5, length(interim)))
+    i <- 1
+   for (interim_val in interim) {
+    obs_event_int <- apply(all_data, 1, cal_event_int)
+    sur_data_int <- cbind(all_data,t(obs_event_int))
+    obs_event_fin <- apply(sur_data_int, 1, cal_event_fin) 
+    result[ , , i] <- cbind(sur_data_int,t(obs_event_fin))[ ,c(4,5,6,7,8)]
+    i = i + 1
+   }
+   return(result)
+}
+
+}
 
 
 
@@ -486,7 +497,5 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
                   ))
   
 }
-
-
 
 
