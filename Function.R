@@ -427,7 +427,7 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
       }
   powerful_m1 <- result_m1[, which(result_m1[3,] == max(result_m1[3,]))]
     #Find the most powerful m1,t1
-  if (is.null(dim(powerful_m1))) 
+  if (is.null(powerful_m1)) 
     {   # Return NULL when something goes wrong
       return(NULL)
     }
@@ -450,7 +450,7 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
         }
       opt_mt
   }
-  if (is.null(dim(result_fin))) 
+  if (is.null(result_fin)) 
     {
       return(NULL)
     }
