@@ -59,8 +59,8 @@ t_low <- quantile((rmst_data[2,]), 0.1)
 # Smallest experiment RMST: interim under H0
 t_up <- quantile((rmst_data[8,]), 0.9)
 #Log rank
-c_low <- quantile(logrank_data, 0.2)
-c_up <- quantile(logrank_data, 0.8)
+c_low <- quantile(logrank_data, 0.1)
+c_up <- quantile(logrank_data, 0.9)
 search_step_lr <- (c_up - c_low) / search_times
 
 # Control PET0 
