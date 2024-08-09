@@ -195,7 +195,7 @@ emp_est <- function(acc_time,cen_time,lambda_H0,lambda_H1)
 #----------5. log_rank_sim --------
 # For one-sided log rank test simulation. Return the simulated alpha
 
-log_rank_sim <- function(data_C,data_E,sim_size,n,alpha,sided)
+log_rank_sim <- function(data_C, data_E, sim_size, n, alpha, sided)
 {
   # n is the sample size of each group
   # sim_size is the times of simulation
@@ -213,6 +213,31 @@ log_rank_sim <- function(data_C,data_E,sim_size,n,alpha,sided)
   }
   return(list(rejection = sum(logrank_result[1, ] <= alpha) / sim_size, # rejection times
               z_stats = logrank_result[2, ]))  # the z statistics W/sigma of every simulation
+}
+
+
+
+
+
+#----------6. mdir_sim --------
+# For one-sided multiple direction log rank test simulation. Return the simulated alpha
+
+mdir_sim <- function(data_C, data_E, sim_size, n, alpha, iter)
+{
+  # This function only accept data.frame input and need correct colnames
+  data_C <- as.data.frame(data_C)
+  data_E <- as.data.frame(data_E)
+  colnames(data_C) <- c('time', 'event', 'group')
+  colnames(data_E) <- c('time', 'event', 'group')
+  mdir_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'mdir.logrank') %dopar% {
+    pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
+    result <- mdir.onesided(data = pre_data, group1 = 0, iter = iter)
+    p <- result$p_value
+    test_stats <- result$stat # return the z statistics for two stages trials
+    c(p, test_stats)
+  }
+  return(list(rejection = sum(mdir_result[1, ] <= alpha) / sim_size, # rejection times
+              test_stats = mdir_result[2, ]))  # the z statistics W/sigma of every simulation
 }
 
 
