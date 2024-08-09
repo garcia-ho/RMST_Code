@@ -298,8 +298,8 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
             if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a1 &
                 proc_h1/sim_size >= tar_pow1_low )
               {
-              mark_c <- c(m1, t1, proc_h0/sim_size, proc_h1/sim_size)
-              result_t1 <- cbind(result_t1, mark_c)   
+                mark_c <- c(m1, t1, proc_h0/sim_size, proc_h1/sim_size)
+                result_t1 <- cbind(result_t1, mark_c)   
               }    
         }
       }
