@@ -17,7 +17,7 @@ Hope I could publish a paper based on this for my Ph.D. application.
 
 
 
-Basically, our method clinical trial design with RMST difference.  
+Basically, our method is testing both RMST difference and the RMST of experiment group.  
 I will specify it in detail if the final result is satisfying.  
 
 No Bayesian method would be compared with I guess.
