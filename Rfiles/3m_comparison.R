@@ -50,7 +50,7 @@ logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1
 
 #Grid search critical value---------------------------
 #RMST
-m_low <- quantile((rmst_data[2,] - rmst_data[1,]), 0.1)
+m_low <- 0  # for superiority test
 # Smallest RMST difference: interim under H0
 m_up <- quantile((rmst_data[8,] - rmst_data[7,]), 0.9)
 # Largest RMST difference: final under H1

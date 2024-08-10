@@ -231,7 +231,7 @@ mdir_sim <- function(data_C, data_E, sim_size, n, alpha, iter)
   colnames(data_E) <- c('time', 'event', 'group')
   mdir_result <- foreach(k = 1:sim_size, .combine = 'cbind', .packages = 'mdir.logrank') %dopar% {
     pre_data <- rbind(data_C[((k-1)*n+1):(k*n),],data_E[((k-1)*n+1):(k*n),])
-    result <- mdir.onesided(data = pre_data, group1 = 0, iter = iter)
+    result <- mdir.onesided(data = pre_data, group1 = 0, iter = iter, wild = "norm")
     p <- result$p_value
     test_stats <- result$stat # return the z statistics for two stages trials
     c(p, test_stats)
