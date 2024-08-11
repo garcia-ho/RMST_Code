@@ -79,15 +79,14 @@ if (length(interim) == 1) {
 else 
   {  # interim is a c() it return different interim event 
     result <- array(NA, dim = c(N , 5, length(interim)))
-    result <- foreach(i = 1:length(interim), .combine = 'abind', .multicombine = TRUE,
-                     .init = array(NA, dim = c(N, 5, 0)), .packages = c("abind")) %dopar% 
-      {
-        interim_val <- interim[i]
-        obs_event_int <- apply(all_data, 1, cal_event_int)
-        sur_data_int <- cbind(all_data,t(obs_event_int))
-        obs_event_fin <- apply(sur_data_int, 1, cal_event_fin) 
-        array(cbind(sur_data_int,t(obs_event_fin))[ ,c(4,5,6,7,8)], dim = c(N, 5, 1))
-      }
+    for (i in 1 : length(interim))
+    {
+      interim_val <- interim[i]
+      obs_event_int <- apply(all_data, 1, cal_event_int)
+      sur_data_int <- cbind(all_data,t(obs_event_int))
+      obs_event_fin <- apply(sur_data_int, 1, cal_event_fin) 
+      result[, , i] <- cbind(sur_data_int,t(obs_event_fin))[ ,c(4,5,6,7,8)]
+    }
    return(result)
   }
 }
