@@ -317,25 +317,18 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
         }
       else 
         {
-          opt_a1 <- 0
-          opt_power <- 0
-          opt_t1 <- 0
           for (t1 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times))
           {
             proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > t1))
             proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > t1))
-            if (proc_h0/sim_size >= opt_a1 & proc_h0/sim_size < tar_a1 &  #largest alpha(smallest PET0)
-                proc_h1/sim_size >= opt_power )
+            if (proc_h0/sim_size < tar_a1 & proc_h1/sim_size >= tar_pow1_low )
               {
-                opt_a1 <- proc_h0/sim_size
-                opt_power <- proc_h1/sim_size
-                opt_t1 <- t1
-                result_t1 <- c(m1, opt_t1, opt_a1, opt_power)
+                result_t1 <- cbind(result_t1, c(m1, t1, proc_h0/sim_size, proc_h1/sim_size))
               }    
           }
         }
       result_t1
-        }
+      }
 
     if (is.null(result_m1_t1)) {
       # Return NULL when something goes wrong
@@ -349,8 +342,8 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
       bestmt <- powerful_m1_t1
     }
     else {
-      bestmt <- powerful_m1_t1[, which(powerful_m1_t1[3,] == max(powerful_m1_t1[3,])) ]
-    } # return the result with the larges alpha
+      bestmt <- powerful_m1_t1[, which(powerful_m1_t1[2,] == max(powerful_m1_t1[2,])) ]
+    } # return the result with the larges t1
     # Among these most powerful, find the m1 with smallest absolute value 
     m1 <- bestmt[1]
     t1 <- bestmt[2]  # t1 = -Inf when simple RMST difference test
@@ -359,7 +352,6 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
     result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% 
       { 
         m2 = m_low + i * search_step
-        opt_alpha <- 0
         opt_power <- 0
         opt_m2 <- 0
         opt_t2 <- 0
@@ -370,14 +362,12 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
                           (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2))
             proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & 
                           (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2))
-            if (proc_h0/sim_size >= opt_alpha & proc_h0/sim_size < tar_a2 & 
-                proc_h1/sim_size >= opt_power) 
+            if ( proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) 
                 {
-                  opt_alpha <- proc_h0/sim_size
                   opt_power <- proc_h1/sim_size
                   opt_m2 <- m2
                   opt_t2 <- -Inf
-                  opt_mt <- c(opt_m2,opt_t2,opt_alpha,opt_power)
+                  opt_mt <- c(opt_m2,opt_t2,proc_h0/sim_size,opt_power)
                 }
             }
       else 
@@ -389,14 +379,12 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
               proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & (rmst_h1_all[2, ] > t1) &
                             (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2) & (rmst_h1_all[4, ] > t2))
                   # return the best 
-              if (proc_h0/sim_size >= opt_alpha & proc_h0/sim_size < tar_a2 & 
-                  proc_h1/sim_size >= opt_power) 
+              if ( proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) 
                 {
-                  opt_alpha <- proc_h0/sim_size
                   opt_power <- proc_h1/sim_size
                   opt_m2 <- m2
                   opt_t2 <- t2
-                  opt_mt <- c(opt_m2, opt_t2, opt_alpha, opt_power)
+                  opt_mt <- c(opt_m2, opt_t2, proc_h0/sim_size, opt_power)
                 }
             }
         }
@@ -415,8 +403,8 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
     }
   else 
     {
-      best_result <- powerful_fin[ , which(powerful_fin[3,] == max(powerful_fin[3,])) ]
-    }    # most powerful result with largest alpha (don't waste alpha)
+      best_result <- powerful_fin[ , which(powerful_fin[2,] == max(powerful_fin[2,])) ]
+    }    
     return(data.frame(m1 = m1,
                   t1 = t1,
                   PET0 = 1 - bestmt[3],
