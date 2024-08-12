@@ -21,7 +21,7 @@ Basically, our method is testing both RMST difference and the RMST of experiment
 
 ## 2 stages rejection region (one-sided):
 - 1. Log rank test
-    - \textcolor{lightgreen}{\frac{W_1}{\sigma_1}>c_1\ \&\ \frac{W}{\sigma}>c}$, where $\frac{W}{\sigma}>c is the normal log rank test statistics
+    - \frac{W_1}{\sigma_1}>c_1\ \&\ \frac{W}{\sigma}>c, where \frac{W}{\sigma}>c is the normal log rank test statistics
 E, C are the RMST value of experiment group and the control group respectively.
 - 2. Simple RMST Difference
     - $ \textcolor{lightgreen}{E(\tau_1) - C(\tau_1) > m_1\ \&\  E(\tau_2)-C(\tau_2)>m_2 }$
