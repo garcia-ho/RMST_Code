@@ -36,7 +36,7 @@ No Bayesian method would be compared with I guess.
 
 ## Remarks
 All codes are in R. Presented in notebook R kernel.    
-All functions that used for simulation is stored at [\Function.R](Rfiles/Function.R).  
+All functions that used for simulation is stored at Rfiles/Function.R.  
 The simulation processes of single stage and two stages are stored at different ipynb files.  
 --------------
 VAMOS García
