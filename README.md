@@ -33,8 +33,9 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
 
 No Bayesian method would be compared with I guess.
 
-All codes are in R. Presented in notebook R kernel.
-
+All codes are in R. Presented in notebook R kernel.  
+All functions that used for simulation is stored at [Example File](Function.R)
+The simulation processes of single stage and two stages are stored at different ipynb files.
 --------------
 VAMOS García
 
