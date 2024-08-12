@@ -32,11 +32,12 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
 - 3. Our RMST Rejection method
     - $E(\tau_1)-C(\tau_1)>m_1$ & $E(\tau_1)>t_1$ & $E(\tau_2)-C(\tau_2)>m_2\$ & $E(\tau_2)>t_2$
 
-No Bayesian method would be compared with I guess.
+No Bayesian method would be compared with I guess.  
 
-## Remarks
-All codes are in R. Presented in notebook R kernel.    
-All functions that used for simulation is stored at Rfiles/Function.R.  
+All codes are in R. Presented in notebook R kernel.  
+
+All functions that used for simulation is stored at [Function.R](Rfiles/Function.R).  
+  
 The simulation processes of single stage and two stages are stored at different ipynb files.  
 --------------
 VAMOS García
