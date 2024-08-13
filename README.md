@@ -20,12 +20,13 @@ Hope I could publish a paper based on this for my Ph.D. application.
 
 Basically, our method is testing both RMST difference and the RMST of experiment group.  
 ## Hypothesis
-$H_0:\ \lambda_E(t) = \lambda_C(t)$, where $\lambda$ is the hazard function  
+$H_0:\ \lambda_E(t) > \lambda_C(t)$, where $\lambda$ is the hazard function  
 $H_1:\ \lambda_E(t) < \lambda_C(t)$  
 
 ## Two stages trial rejection region (one-sided):
 - 1. Log rank test
-    - $\frac{W_1}{\sigma_1}>c_1$ & $\frac{W}{\sigma}>c$, where $\frac{W}{\sigma}>c$ is the normal log rank test statistics  
+    - $\frac{W_1}{\sigma_1}>c_1$ & $\frac{W}{\sigma}>c$, where $\frac{W}{\sigma}>c$ is the normal log rank test statistics    
+According to Jung(2017), two stages log-ranktest can reach a similar power as corresponding single stage test if the interim period, $c_1,\ c$ are well selected. 
 
 $E, C$ are the RMST value of experiment group and the control group respectively.   
 $\tau$ is the cutoff time point of interim period(1) and overall trial(2)  
@@ -34,14 +35,15 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
     - $E(\tau_1) - C(\tau_1) > m_1$ & $E(\tau_2)-C(\tau_2)>m_2$
 
 - 3. Our RMST Rejection method
-    - $E(\tau_1)-C(\tau_1)>m_1$ & $E(\tau_1)>t_1$ & $E(\tau_2)-C(\tau_2)>m_2\$ & $E(\tau_2)>t_2$
+    - $E(\tau_1)-C(\tau_1)>m_1$ & $E(\tau_1)>t_1$ & $E(\tau_2)-C(\tau_2)>m_2\$ & $E(\tau_2)>t_2$  
 
-The critical value of $m_1,t_1,m_2,t_2$ is calculated by 10000 times Monte Carlo simulation
-No Bayesian method would be compared with I guess.  
+The critical values of $m_1,t_1,m_2,t_2$ are calculated by 10000 times Monte Carlo simulation
+  
 
 All codes are in R. Presented in notebook R kernel.  
 All functions that used for simulation is stored at [Function.R](Rfiles/Function.R).  
-The simulation processes of single stage and two stages are stored at different ipynb files. 
+The simulation processes of single stage and two stages are stored at different ipynb files.
+No Bayesian methods would be compared with. 
 
 --------------
 Vamos García
