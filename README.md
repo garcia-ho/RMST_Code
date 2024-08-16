@@ -37,8 +37,10 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
 - 3. Our RMST Rejection method
     - $E(\tau_1)-C(\tau_1)>m_1$ & $E(\tau_1)>t_1$ & $E(\tau_2)-C(\tau_2)>m_2\$ & $E(\tau_2)>t_2$  
 
-The critical values of $m_1,t_1,m_2,t_2$ are calculated by 10000 times Monte Carlo simulation
-  
+The critical values of $m_1,t_1,m_2,t_2$ are calculated by 10000 times Monte Carlo simulation  
+****
+There are some bugs in the grid searching loop. The power should be lower than shawn in the graph. I would try to use normal covariance matrix to calculate the stopping criteria.
+****
 
 All codes are in R. Presented in notebook R kernel.  
 All functions that used for simulation is stored at [Function.R](Rfiles/Function.R).  
