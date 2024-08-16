@@ -39,7 +39,8 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
 
 The critical values of $m_1,t_1,m_2,t_2$ are calculated by 10000 times Monte Carlo simulation  
 ****
-There are some bugs in the grid searching loop. The power should be lower than shawn in the graph. I would try to use normal covariance matrix to calculate the stopping criteria.
+There are some bugs in the grid searching loop. The power should be lower than what is shawn in the graph. I would try to use normal covariance matrix to calculate the stopping criteria.  
+Besides, the asymptotic normality of RMST under censoring and uniform accrual time should be doubted.... 
 ****
 
 All codes are in R. Presented in notebook R kernel.  
