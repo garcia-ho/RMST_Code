@@ -243,23 +243,21 @@ mdir_sim <- function(data_C, data_E, sim_size, n, alpha, iter)
 
 
 
-#--------------7. RMST_RSDST---------
+#--------------7. theo_RMST---------
 # Calculate the theorecital RMST and RSDST of a explicit survival function
 
-RMST_RSDST <- function(lambda,tau) 
+theo_RMST <- function(lambda, dist, tau) 
 {
+  if (dist == 'exp') 
+    {
     surv_fun <- function(t) {
              exp(-lambda * t)
         }
     RMST <- integrate(surv_fun, lower = 0, upper = tau)$value
     
-    E_x2_fun <- function(t) {
-            t * exp(-lambda * t)
-        }
-    RSDST <- 2 * integrate(E_x2_fun, lower = 0, upper = tau)$value - RMST^2
-    
-    return(data.frame('RMST' = RMST,
-                      'RSDST' = RSDST))
+    }
+
+    return(RMST)
 }
 
 
