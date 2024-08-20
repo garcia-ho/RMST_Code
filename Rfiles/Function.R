@@ -287,6 +287,55 @@ PET_norm <- function(mu_c,var_c,mu_e,var_e,m1,t1)
 
 
 
+#---------------------- 9. cov_mc -----------------------
+# This function use Monte Carlo simulation to calculate the var_cov matrix of 
+#   [E1-C1, E1, E2-C2, E2]
+# The calculation formula refers to the Lu(2021) sequential trials.
+
+#*************
+# The input rmst_int should be the interim rmst data of two groups (RMST_sim_cal output)
+# rmst_fin is the final rmst data of two groups. sim_size is the MC simulation times B
+# true_rmst_int is the theoretical result of interim rmst of two groups c(RMST_C, RMST_E)
+
+cov_mc <- function(rmst_int, rmst_fin, true_rmst_int, true_rmst_fin, sim_size){
+
+    diff_C <- rbind(rmst_int[1, ] - true_rmst_int[1], rmst_fin[1, ] - true_rmst_fin[1])
+    cov_C <- matrix(0, nrow = 2, ncol = 2)
+    for (i in 1:sim_size) 
+      {
+        product <- diff_C[, i] %*% t(diff_C[, i])  
+        cov_C <- cov_C + product  
+      }
+    cov_C <- cov_C / sim_size   # [ Var(C1)  Cov(C1, C2)
+                                #  Cov(C1, C2)  Var(C2) ]
+
+    diff_E <- rbind(rmst_int[2,] - true_rmst_int[2], rmst_fin[2,] - true_rmst_fin[2])
+    cov_E <- matrix(0, nrow = 2, ncol = 2)
+    for (i in 1:sim_size) 
+      {
+        product <- diff_E[,i] %*% t(diff_E[,i])  
+        cov_E <- cov_E + product  
+      }
+    cov_E <- cov_E / sim_size   # [ Var(E1)  Cov(E1, E2)
+                                #  Cov(E1, E2)  Var(E2) ]
+
+    var_cov_all <- matrix(
+            c(cov_E[1,1]+cov_C[1,1], cov_E[1,1], cov_C[1,2]+cov_E[1,2], cov_E[1,2],
+              cov_E[1,1], cov_E[1,1], cov_E[1,2], cov_E[1,2],
+              cov_C[1,2]+cov_E[1,2], cov_E[1,2], cov_E[2,2]+cov_C[2,2], cov_E[2,2],
+              cov_E[1,2], cov_E[1,2], cov_E[2,2], cov_E[2,2]), nrow = 4, ncol = 4)
+
+    return(var_cov_all)
+  }
+
+
+
+
+
+
+
+
+
 #------------------9. find_m_t_RMST------------------
 # Works for both Our RMST test and simple RMST difference test
 # Given rmst data of interim and all, find the best m1,t1, m2,t2
