@@ -37,15 +37,60 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
 - 3. Our RMST Rejection method
     - $E(\tau_1)-C(\tau_1)>m_1$ & $E(\tau_1)>t_1$ & $E(\tau_2)-C(\tau_2)>m_2\$ & $E(\tau_2)>t_2$  
 
-The critical values of $m_1,t_1,m_2,t_2$ are calculated by 10000 times Monte Carlo simulation  
 ****
+## Asymptotic Normality of RMST:
+```math
+[E_1-C_1,\ E_1,\ E_2-C_2,\ E_2] \sim \mathcal{N}\ (\ \hat{\mu},\ \hat{\Sigma}\ )
+```
+
+```math
+\hat{\Sigma} = 
+ \left[
+ \begin{matrix}
+   Var(E_1)+Var(C_1) & Var(E_1) & Cov(E_1,E_2)+Cov(C_1,C_2) & Cov(E_1,E_2) \\
+                   & Var(E_1) & Cov(E_1,E_2) & Cov(E_1,E_2) \\
+                   &         & Var(E_2)+Var(C_2) & Var(E_2)\\
+                   &         &                 & Var(E_2)\\
+  \end{matrix}
+\right]
+```math
+
+### Estimated by Monte Carlo Simulation
+
+Similar to Lu(2021):  
+[Lu Y, Tian L. Statistical considerations for sequential analysis of the restricted mean survival time for randomized clinical trials[J]. Statistics in biopharmaceutical research, 2021, 13(2): 210-218.](https://www.tandfonline.com/doi/abs/10.1080/19466315.2020.1816491)
+
+
+```math
+ \left[
+ \begin{matrix}
+   Var(\hat{E_1}) & Cov(\hat{E_1}, \hat{E_2}) \\
+   Cov(\hat{E_1}, \hat{E_2}) & Var{\hat{E_2}} \\
+  \end{matrix}
+  \right] = 
+
+\frac{1}{B}\sum\limits_{i = 1}^{B} 
+ \left[
+ \begin{matrix}
+   \hat{RMST_{E1}} - RMST_{E1} \\
+   \hat{RMST_{E2}} - RMST_{E2} \\
+  \end{matrix}
+  \right] ^{\bigotimes2}_i 
+```
+$RMST_{E1} =  \int^{\tau_{interim}}_0 S_{E}(t)dt$ is the theoretical RMST value.
+
+****
+
 ## Parameter Optimization (Grid Search)
-Reference: Zhou(2017) BOP2 Bayesian design. DOI:10.1002/sim.7338  
+Reference: Zhou(2017) BOP2 Bayesian design:  
+[Zhou H, Lee J J, Yuan Y. BOP2: Bayesian optimal design for phase II clinical trials with simple and complex endpoints[J]. Statistics in medicine, 2017, 36(21): 3302-3314.](https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.7338)
+
+
 
 In order to solve the critical values ($m_1,\ t_1,\ m_2,\ t_2$), a function that can control the normal probability is required. The following $\mathcal{f}(n)$  is what we proposed. 
 
 ```math
-\Large \mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}
+\large \mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}
 ```
 
 $n$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.   
@@ -70,7 +115,6 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 ```
 
 #### Find the most powerful one under $H_1$ among these ($m_1,\ t_1,\ m_2,\ t_2$)  
-
 
 
 ****
