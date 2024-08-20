@@ -325,7 +325,11 @@ cov_mc <- function(rmst_int, rmst_fin, true_rmst_int, true_rmst_fin, sim_size){
               cov_C[1,2]+cov_E[1,2], cov_E[1,2], cov_E[2,2]+cov_C[2,2], cov_E[2,2],
               cov_E[1,2], cov_E[1,2], cov_E[2,2], cov_E[2,2]), nrow = 4, ncol = 4)
 
-    return(var_cov_all)
+    mu <- c(mean(rmst_int[2,] - rmst_int[1,]), mean(rmst_int[2,]),
+            mean(rmst_fin[2,] - rmst_fin[1,]), mean(rmst_fin[2,]))
+
+    return(list(mu = mu,
+                sigma = var_cov_all))
   }
 
 
