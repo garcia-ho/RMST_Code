@@ -71,7 +71,7 @@ Similar to Lu(2021):
    \hat{RMST_{E1}} - RMST_{E1} \\
    \hat{RMST_{E2}} - RMST_{E2} \\
   \end{matrix}
-  \right] ^{\bigotimes2}_i \\
+  \right] ^{\bigotimes2}_i  
 
   RMST_{E1} =  \int^{\tau_{interim}}_0 S_{E}(t)dt
 ```  
