@@ -72,7 +72,9 @@ Similar to Lu(2021):
    \hat{RMST_{E2}} - RMST_{E2} \\
   \end{matrix}
   \right] ^{\bigotimes2}_i  
-
+ ```  
+  
+```math
   RMST_{E1} =  \int^{\tau_{interim}}_0 S_{E}(t)dt
 ```  
 The theoretical RMST value did not consider accrual and censoring distribution.
