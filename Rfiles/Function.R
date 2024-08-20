@@ -337,10 +337,7 @@ mu_cov_mc <- function(rmst_int, rmst_fin, true_rmst_int, true_rmst_fin, sim_size
 
 
 
-
-
-
-#------------------9. find_m_t_RMST------------------
+#------------------ 10. find_m_t_RMST ------------------
 # Works for both Our RMST test and simple RMST difference test
 # Given rmst data of interim and all, find the best m1,t1, m2,t2
 # n need to be given in this loop
@@ -470,7 +467,7 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
 
 
 
-#------------------10. find_m_logrank------------------
+#------------------11. find_m_logrank------------------
 # Similar to find_m_t_RMST, this one is for log rank test 2 stages design
 # The z statistics (W/sigma) in logrank test of each simulation is required as an input
 # The z statistics can be obtained by log_rank_sim function $ z_stats
