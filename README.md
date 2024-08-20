@@ -45,14 +45,17 @@ Reference: Zhou(2017) BOP2 Bayesian design. DOI:10.1002/sim.7338
 In order to solve the critical values ($m_1,\ t_1,\ m_2,\ t_2$), a function that can control the normal probability is required. The following $\mathcal{f}(n)$  is what we proposed.  
 $$\Large \mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}$$
 $n$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.   
-Then we set the following constraints:  
-$$\begin{aligned}
+Then we set the following constraints:   
+
+```math
+\begin{aligned}
 \large P(E_1 - C_1 > m_1) &= \mathcal{f}(n)  \\
 \large P(E_1 - C_1 > m_1\ \&\ E_1 > t_1) &= \lambda · \mathcal{f}(n) \\
 \large P(E_2 - C_2 > m_2) &=  \mathcal{f}(N) \\
 \large P(E_2 - C_2 > m_2\ \&\ E_2 > t_2) &= \lambda · \mathcal{f}(N) \\
 0<\lambda<1,\ \gamma>0  
-\end{aligned}$$
+\end{aligned}
+```
 
 $\mathcal{f}(n)$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
 #### It leads to a small early stop probability with an insufficient interim sample size.  
