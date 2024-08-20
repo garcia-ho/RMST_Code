@@ -39,8 +39,35 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
 
 The critical values of $m_1,t_1,m_2,t_2$ are calculated by 10000 times Monte Carlo simulation  
 ****
-There are some bugs in the grid searching loop. The power should be lower than what is shawn in the graph. I would try to use normal covariance matrix to calculate the stopping criteria.  
-Besides, the asymptotic normality of RMST under censoring and uniform accrual time should be doubted.... 
+## Parameter Optimization (Grid Search)
+Reference: Zhou(2017) BOP2 Bayesian design. DOI:10.1002/sim.7338  
+
+In order to solve the critical values ($m_1,\ t_1,\ m_2,\ t_2$), a function that can control the normal probability is required. The following $\mathcal{f}(n)$  is what we proposed.  
+$$
+\Large \mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}
+$$
+$n$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.   
+Then we set the following constraints:  
+$$
+\begin{aligned}
+\large P(E_1 - C_1 > m_1) &= \mathcal{f}(n)  \\
+\large P(E_1 - C_1 > m_1\ \&\ E_1 > t_1) &= \lambda · \mathcal{f}(n) \\
+\large P(E_2 - C_2 > m_2) &=  \mathcal{f}(N) \\
+\large P(E_2 - C_2 > m_2\ \&\ E_2 > t_2) &= \lambda · \mathcal{f}(N) \\
+0<\lambda<1,\ \gamma>0
+\end{aligned}
+$$
+
+$ \mathcal{f}(n)$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
+#### It leads to a small early stop probability with an insufficient interim sample size.  
+Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ determines a set of ($m_1,\ t_1,\ m_2,\ t_2$) by normal calculation. Record critical values sets that yield the desirable overall type I error $\alpha$:  
+$$
+\large P(E_1-C_1>m_1\ \&\  E_1>t_1\ \&\  E_2 - C_2>m_2\ \&\  E_2>t_2\ |H_0) < \alpha
+$$
+#### Find the most powerful one under $H_1$ among these ($m_1,\ t_1,\ m_2,\ t_2$)  
+
+
+
 ****
 
 All codes are in R. Presented in notebook R kernel.  
