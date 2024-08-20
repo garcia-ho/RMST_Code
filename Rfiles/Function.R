@@ -287,7 +287,7 @@ PET_norm <- function(mu_c,var_c,mu_e,var_e,m1,t1)
 
 
 
-#---------------------- 9. cov_mc -----------------------
+#---------------------- 9. mu_cov_mc -----------------------
 # This function use Monte Carlo simulation to calculate the var_cov matrix of 
 #   [E1-C1, E1, E2-C2, E2]
 # The calculation formula refers to the Lu(2021) sequential trials.
@@ -297,7 +297,7 @@ PET_norm <- function(mu_c,var_c,mu_e,var_e,m1,t1)
 # rmst_fin is the final rmst data of two groups. sim_size is the MC simulation times B
 # true_rmst_int is the theoretical result of interim rmst of two groups c(RMST_C, RMST_E)
 
-cov_mc <- function(rmst_int, rmst_fin, true_rmst_int, true_rmst_fin, sim_size){
+mu_cov_mc <- function(rmst_int, rmst_fin, true_rmst_int, true_rmst_fin, sim_size){
 
     diff_C <- rbind(rmst_int[1, ] - true_rmst_int[1], rmst_fin[1, ] - true_rmst_fin[1])
     cov_C <- matrix(0, nrow = 2, ncol = 2)
