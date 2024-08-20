@@ -53,12 +53,13 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
                    &         &                 & Var(E_2)\\
   \end{matrix}
 \right]
-```math
+```
 
 ### Estimated by Monte Carlo Simulation
 
 Similar to Lu(2021):  
 [Lu Y, Tian L. Statistical considerations for sequential analysis of the restricted mean survival time for randomized clinical trials[J]. Statistics in biopharmaceutical research, 2021, 13(2): 210-218.](https://www.tandfonline.com/doi/abs/10.1080/19466315.2020.1816491)
+
 
 
 ```math
