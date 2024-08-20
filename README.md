@@ -54,11 +54,8 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2)
 ```
 
 ### Estimated by Monte Carlo Simulation
-
 Similar to Lu(2021):  
 [Lu Y, Tian L. Statistical considerations for sequential analysis of the restricted mean survival time for randomized clinical trials[J]. Statistics in biopharmaceutical research, 2021, 13(2): 210-218.](https://www.tandfonline.com/doi/abs/10.1080/19466315.2020.1816491)
-
-
 
 ```math
  \left[
@@ -75,18 +72,18 @@ Similar to Lu(2021):
    \hat{RMST_{E2}} - RMST_{E2} \\
   \end{matrix}
   \right] ^{\bigotimes2}_i 
-```
-$$RMST_{E1} =  \int^{\tau_{interim}}_0 S_{E}(t)dt$$ is the theoretical RMST value.
+```  
+
+$RMST_{E1} =  \int^{\tau_{interim}}_0 S_{E}(t)dt$ is the theoretical RMST value.
 
 ****
 
 ## Parameter Optimization (Grid Search)
 Reference: Zhou(2017) BOP2 Bayesian design:  
-[Zhou H, Lee J J, Yuan Y. BOP2: Bayesian optimal design for phase II clinical trials with simple and complex endpoints[J]. Statistics in medicine, 2017, 36(21): 3302-3314.](https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.7338)
+[Zhou H, Lee J J, Yuan Y. BOP2: Bayesian optimal design for phase II clinical trials with simple and complex endpoints[J]. Statistics in medicine, 2017, 36(21): 3302-3314.](https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.7338)  
 
 
-
-In order to solve the critical values ($m_1,\ t_1,\ m_2,\ t_2$), a function that can control the normal probability is required. The following $\mathcal{f}(n)$  is what we proposed. 
+In order to solve the critical values ($m_1,\ t_1,\ m_2,\ t_2$), a function that can control the normal probability is required. The following $\mathcal{f}(n)$ is what we proposed. 
 
 ```math
 \large \mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}
