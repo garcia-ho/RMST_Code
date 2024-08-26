@@ -309,7 +309,7 @@ mu_cov_mc <- function(rmst_int, rmst_fin, sim_size){
     cov_C <- cov_C / sim_size   # [ Var(C1)  Cov(C1, C2)
                                 #  Cov(C1, C2)  Var(C2) ]
 
-    diff_E <- rbind(rmst_int[2,] - mean(rmst_int[2,]), rmst_fin[2,] - mean(rmst_fin[2,]))
+    diff_E <- rbind(rmst_int[2, ] - mean(rmst_int[2, ]), rmst_fin[2, ] - mean(rmst_fin[2, ]))
     cov_E <- matrix(0, nrow = 2, ncol = 2)
     for (i in 1:sim_size) 
       {
