@@ -549,9 +549,8 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
 # interim sample size n.
 # overall sample size N. 
 # stated alpha.
-# rmst_data_h0 should have 4 rows: rmst_h0_int(2 rows), rmst_h1_int(2 rows)
 
-adp_grid_src <- function(rmst_h0_int, rmst_h0_fin, rmst_h1_int, rmst_h1_fin,
+adp_grid_src <- function(rmst_int_h0, rmst_fin_h0, rmst_int_h1, rmst_fin_h1,
                         mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, sim_size) 
   {
       # Interim
