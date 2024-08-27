@@ -123,7 +123,7 @@ RMST_sim_cal <- function(n,data_E,data_C,tau,sim_size)
 
 
 
-#------ 3. RMST_sim_test-------
+#---------------- 3. RMST_sim_test-------
 # Different from RMST_sim_cal, It return a dataframe of two_sided RMST test rejection times over simulation times.
 # It also counts the times of tau adjustment
 # This function can be used to compare our rejection method with classical RMST diff test 
@@ -337,6 +337,7 @@ mu_cov_mc <- function(rmst_int, rmst_fin, sim_size){
 
 
 
+
 #------------------ 10. find_m_t_RMST ------------------
 # Works for both Our RMST test and simple RMST difference test
 # Given rmst data of interim and all, find the best m1,t1, m2,t2
@@ -459,7 +460,7 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
                   m2 = best_result[1],
                   t2 = best_result[2],
                   alpha = best_result[3],
-                  Power = best_result[4]
+                  power = best_result[4]
                   ))
 }
 
@@ -534,9 +535,96 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
                   PET1 = 1 - bestmt[3],
                   m2 = powerful_fin[1],
                   alpha = powerful_fin[2],
-                  Power = powerful_fin[3]
+                  power = powerful_fin[3]
                   ))
 }
 
 
 
+
+#-----------------------12. adp_grid_src----------------------
+# This is the function for adaptive grid search of parameters lambda and gamma.
+# In order to solve the critical values m & t, we made extra assumption based on exponential probability.
+# Input mu_cov_h0 is the mu and cov of (E1-C1, E1, E2-C2, E2) under H0, output of func: mu_cov_mc
+# interim sample size n.
+# overall sample size N. 
+# stated alpha.
+# rmst_data_h0 should have 4 rows: rmst_h0_int(2 rows), rmst_h1_int(2 rows)
+
+adp_grid_src <- function(rmst_h0_int, rmst_h0_fin, rmst_h1_int, rmst_h1_fin,
+                        mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, sim_size) 
+  {
+      # Interim
+      mu1 <- mu_cov_h1$mu[c(1,2)]
+      sigma1 <- mu_cov_h1$sigma[1:2, 1:2]
+      # Final
+      mu2 <- mu_cov_h1$mu[c(3,4)]
+      sigma2 <- mu_cov_h1$sigma[3:4, 3:4]
+
+      # Function to minimize solve t in P(E-C > m & E > t) = tar_prob given m
+      norm_2d <- function(t, m, mean, sigma, tar_prob) 
+        {
+          prob <- pmvnorm(lower = c(m, t), 
+                          upper = rep(Inf, 2), 
+                          mean = mean, 
+                          sigma = sigma)
+          return (prob - tar_prob)
+        }
+      
+      #Grid search
+    crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.01), .combine = 'cbind') %dopar%
+      {   
+        best_gamma <- c()
+        best_power <- 0
+        for (gamma in seq(0, 1, by = 0.01))
+          {
+            p1_tar <- exp(-gamma * (int_n / fin_n))            # P(E1-C1 > m1)
+            p2_tar <- lambda * exp(-gamma * (int_n / fin_n))   # P(E1-C1 > m1, E1 > t1)
+            p3_tar <- exp(-gamma * ( fin_n / fin_n))            # P(E2-C2 > m2)
+            p4_tar <- lambda * exp(-gamma * (fin_n / fin_n))   # P(E2-C2 > m2, E2 > t2)
+
+            # First equation P(E1-C1 > m1) = p1_tar
+            m1 <- qnorm(1 - p1_tar, mean = mu1[1], sd = sqrt(sigma1[1, 1]))
+            # Second equation P(E1-C1 > m1 & E1 > t1) = p2_tar
+            t1 <- uniroot(norm_2d, interval = c(0, 100), m = m1, 
+                          mean = mu1, sigma = sigma1, tar_prob = p2_tar)$root
+            # Third equation
+            m2 <- qnorm(1 - p3_tar, mean = mu2[1], sd = sqrt(sigma2[1, 1])) 
+            # Forth equation
+            t2 <- uniroot(norm_2d, interval = c(0, 100), m = m2, 
+                        mean = mu2, sigma = sigma2, tar_prob = p4_tar)$root
+
+            proc_h0 <- sum((rmst_int_h0[2, ] - rmst_int_h0[1, ] > m1) & (rmst_int_h0[2, ] > t1) &
+                      (rmst_fin_h0[2, ] - rmst_fin_h0[1, ] > m2) & (rmst_fin_h0[2, ] > t2))
+            proc_h1 <- sum((rmst_int_h1[2, ] - rmst_int_h1[1, ] > m1) & (rmst_int_h1[2, ] > t1) &
+                      (rmst_fin_h1[2, ] - rmst_fin_h1[1, ] > m2) & (rmst_fin_h1[2, ] > t2))
+
+            if (m1 > 0 & m2 > 0 & proc_h0 / sim_size <= alpha 
+                & proc_h1 / sim_size > best_power)  #control alpha, find the most powerful set
+              {
+                best_power <- proc_h1 / sim_size
+                best_gamma <- c(m1, t1, m2, t2, lambda, gamma, proc_h0/sim_size, proc_h1/sim_size)
+              }
+          }
+        best_gamma 
+        }
+      
+      best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
+      threshold <- best_res[1:4] # critical values
+      PET0 <- sum((rmst_int_h0[2, ] - rmst_int_h0[1, ] < best_res[1]) | 
+                  (rmst_int_h0[2, ] < best_res[2])) / sim_size
+      PET1 <- sum((rmst_int_h1[2, ] - rmst_int_h1[1, ] < best_res[1]) | 
+                  (rmst_int_h1[2, ] < best_res[2])) / sim_size
+
+      return(data.frame(m1 = threshold[1],
+                        t1 = threshold[2],
+                        m2 = threshold[3],
+                        t2 = threshold[4],
+                        PET0 = PET0,
+                        PET1 = PET1,
+                        alpha = best_res[7],
+                        power = best_res[8]))
+
+
+
+    }
