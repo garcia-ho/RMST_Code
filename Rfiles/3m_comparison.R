@@ -5,8 +5,8 @@
 # We take Minimax design in Jung 2017 table 1 as the standard
 
 
-m3_compare <- function(n, sim_size, acc_time, cen_time, interim, lambda_H0, lambda_H1, H1_type, 
-                    HR1, HR2, search_times, tar_a1, tar_pow1_low, tar_alpha) 
+m3_compare <- function(n, sim_size, acc_time, cen_time, interim, lambda_H0, 
+                        lambda_H1, H1_type, HR1, HR2, alpha) 
 {
 
 data_C <- expo_gen_2stages(N = n * sim_size, acc_time = acc_time, lambda = lambda_H0, dist = 'exp', 
@@ -33,63 +33,28 @@ rmst_h0_fin <- RMST_sim_cal(n = n,data_E = data_E_H0[ , c(4,5,1)],
 rmst_h1_fin <- RMST_sim_cal(n = n,data_E = data_E_H1[ , c(4,5,1)], 
                                 data_C = data_C[ , c(4,5,1)],tau = acc_time + cen_time,sim_size = sim_size)
 rmst_data <- rbind(rmst_h0_int, rmst_h1_int, rmst_h0_fin, rmst_h1_fin)
+mu_cov_h0 <- mu_cov_mc(rmst_int = rmst_h0_int, rmst_fin = rmst_h0_fin, sim_size = sim_size)
+mu_cov_h1 <- mu_cov_mc(rmst_int = rmst_h1_int, rmst_fin = rmst_h1_fin, sim_size = sim_size)
 
-#Grid search critical value---------------------------
-#RMST
-m_low <- 0  # for superiority test
-# Smallest RMST difference: interim under H0
-m_up <- quantile((rmst_data[8,] - rmst_data[7,]), 0.9)
-# Largest RMST difference: final under H1
-search_step_rmst <- (m_up - m_low) / search_times
-t_low <- quantile((rmst_data[2,]), 0.1)
-# Smallest experiment RMST: interim under H0
-t_up <- quantile((rmst_data[8,]), 0.9)
+z_stats_h0_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], data_E = data_E_H0[ , c(2,3,1)], 
+                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
+z_stats_h1_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], data_E = data_E_H1[ , c(2,3,1)], 
+                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
+z_stats_h0_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)], data_E = data_E_H0[ , c(4,5,1)], 
+                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
+z_stats_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)],  data_E = data_E_H1[ , c(4,5,1)], 
+                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
+logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin)
 
-# Control PET0 
-best_our_rmst <- find_m_t_RMST(m_low = m_low, t_low = t_low, t_up = t_up, rmst_data = rmst_data, 
-                            search_times = search_times, search_step = search_step_rmst, tar_a1 = tar_a1, 
-                            tar_pow1_low = tar_pow1_low, tar_a2 = tar_alpha, sim_size = sim_size)
+best_our <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
+                int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size)
+best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 1000,
+                 alpha = alpha, sim_size = sim_size)
+best_rmst <- find_m_t_RMST(rmst_data = rmst_data, search_times = 1000, 
+                 alpha = alpha, sim_size = sim_size)
 
-best_simple_rmst <- find_m_t_RMST(m_low = m_low, t_low = -Inf, t_up = t_up, rmst_data = rmst_data, 
-                            search_times = search_times, search_step = search_step_rmst, tar_a1 = tar_a1, 
-                            tar_pow1_low = tar_pow1_low, tar_a2 = tar_alpha, sim_size = sim_size)
-
-if (H1_type == 'PH'){  # According to Jung 2017. 2 stages log rank equivelent to one stage power
-    # Empirical alpha
-    result0 <- log_rank_sim(data_C = data_C[ , c(4,5,1)], data_E = data_E_H0[ , c(4,5,1)], sim_size =  sim_size,
-                            n = n, alpha = tar_alpha, sided = 'greater')$rejection
-    # Empirical power   
-    result1 <- log_rank_sim(data_C = data_C[ , c(4,5,1)], data_E = data_E_H1[ , c(4,5,1)], sim_size =  sim_size,
-                            n = n, alpha = tar_alpha, sided = 'greater')$rejection     
-    best_log_rank <- data.frame(alpha = result0,
-                                Power = result1)
-    }
-
-else if (H1_type == 'NPH'){
-    #Log rank
-    z_stats_h0_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], 
-                                data_E = data_E_H0[ , c(2,3,1)], sim_size =  sim_size,
-                            n = n, alpha = 0.05, sided = 'greater')$z_stats
-    z_stats_h1_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], 
-                                data_E = data_E_H1[ , c(2,3,1)], sim_size =  sim_size,
-                            n = n, alpha = 0.05, sided = 'greater')$z_stats
-    z_stats_h0_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)], 
-                                data_E = data_E_H0[ , c(4,5,1)], sim_size =  sim_size,
-                            n = n, alpha = 0.05, sided = 'greater')$z_stats
-    z_stats_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)], 
-                                data_E = data_E_H1[ , c(4,5,1)], sim_size =  sim_size,
-                            n = n, alpha = 0.05, sided = 'greater')$z_stats
-    logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin)
-    c_low <- quantile(logrank_data, 0.1)
-    c_up <- quantile(logrank_data, 0.9) 
-    search_step_lr <- (c_up - c_low) / search_times
-    best_log_rank <- find_m_logrank(m_low = c_low, logrank_data = logrank_data, 
-                            search_times = search_times, search_step = search_step_lr, tar_a1 = tar_a1, 
-                            tar_pow1_low = tar_pow1_low, tar_a2 = tar_alpha, sim_size = sim_size)   
-    }
-
-return(list(best_our_rmst = best_our_rmst, 
-            best_simple_rmst = best_simple_rmst,
-            best_log_rank = best_log_rank))
-
+return(list(PET0 = c(best_lr$PET0, best_rmst$PET0, best_our$PET0),
+            PET1 = c(best_lr$PET1, best_rmst$PET1, best_our$PET1),
+            alpha = c(best_lr$alpha, best_rmst$alpha, best_our$alpha),
+            power = c(best_lr$power, best_rmst$power, best_our$power)))
 }

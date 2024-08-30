@@ -374,16 +374,24 @@ find_m_t_RMST <- function(rmst_data, search_times, alpha, sim_size) {
       return(best_m2)
       }
   powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
+
   if (is.null(powerful_m1)) 
     {   # Return NULL when something goes wrong
       return(NULL)
     }
-  else
+
+  if(is.null(dim(powerful_m1)))
     {
-      powerful_m1 <- data.frame(t(powerful_m1))
-      colnames(powerful_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
-      return(powerful_m1)
+      opt_pet0_m1 <- powerful_m1
     }
+  else
+    {  # find the largest PET0 if multiply solution exist
+      opt_pet0_m1 <- powerful_m1[, which(powerful_m1[3, ] == max(powerful_m1[3, ]))]
+    }
+  
+    opt_pet0_m1 <- data.frame(t(opt_pet0_m1))
+    colnames(opt_pet0_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+    return(opt_pet0_m1)
 }
 
 
@@ -405,7 +413,7 @@ find_m_logrank <- function( logrank_data, search_times, alpha, sim_size)
   z_stats_h0_fin <-  logrank_data[3, ]
   z_stats_h1_fin <-  logrank_data[4, ]
 
-  c_low <- quantile(logrank_data, 0.1)
+  c_low <- quantile(logrank_data, 0.2)
   c_up <- quantile(logrank_data, 0.9) 
 
   result_m1 <- foreach(m1 = seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times), 
@@ -426,17 +434,23 @@ find_m_logrank <- function( logrank_data, search_times, alpha, sim_size)
         }
       return(best_m2)
       }
-  powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
-  if (is.null(powerful_m1)) 
-    {   # Return NULL when something goes wrong
-      return(NULL)
-    }
-  else
-    {
-      powerful_m1 <- data.frame(t(powerful_m1))
-      colnames(powerful_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
-      return(powerful_m1)
-    }
+    powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
+    if (is.null(powerful_m1)) 
+      {   # Return NULL when something goes wrong
+        return(NULL)
+      }
+
+    if(is.null(dim(powerful_m1)))
+      {
+        opt_pet0_m1 <- powerful_m1
+      }
+    else
+      {  # find the largest PET0 if multiply solution exist
+        opt_pet0_m1 <- powerful_m1[, which(powerful_m1[3, ] == max(powerful_m1[3, ]))]
+      }
+      opt_pet0_m1 <- data.frame(t(opt_pet0_m1))
+      colnames(opt_pet0_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+      return(opt_pet0_m1)
 }
 
 
