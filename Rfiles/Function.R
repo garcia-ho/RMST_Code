@@ -339,130 +339,53 @@ mu_cov_mc <- function(rmst_int, rmst_fin, sim_size){
 
 
 #------------------ 10. find_m_t_RMST ------------------
-# Works for both Our RMST test and simple RMST difference test
-# Given rmst data of interim and all, find the best m1,t1, m2,t2
+# Grid searching loop Works for simple RMST difference test (E1 - C1 > m1 & E2 - C2 > m2)
+# Given rmst data of interim and all, find the best m1, m2 for 
 # n need to be given in this loop
-# if t1, t2 is abandon, t_low need to be set as -Inf, It will only return m1,m2
 
-find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_step,
-                     tar_a1, tar_pow1_low, tar_a2, sim_size) {
+
+find_m_t_RMST <- function(rmst_data, search_times, alpha, sim_size) {
   rmst_h0_int <- rmst_data[c(1,2) , ]
   rmst_h1_int <- rmst_data[c(3,4) , ]
-  rmst_h0_all <- rmst_data[c(1,2,5,6) , ]
-  rmst_h1_all <- rmst_data[c(3,4,7,8) , ]
-  result_m1_t1 <- c()
-  result_m1_t1 <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
-      m1 = m_low + i * search_step
-      result_t1 <- c()
-      if (t_low == -Inf) 
-        {   # for simple RMST difference test, No second condition
-          proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1))
-          proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1))
-          if (proc_h0/sim_size < tar_a1 & proc_h1/sim_size >= tar_pow1_low ) 
-            {
-              result_t1 <- c(m1,-Inf,proc_h0/sim_size,proc_h1/sim_size)         
-            }
-        }
-      else 
+  rmst_h0_fin <- rmst_data[c(5,6) , ]
+  rmst_h1_fin <- rmst_data[c(7,8) , ]
+
+  c_low <- 0  #superiority test
+  c_up <- quantile((rmst_data[8,] - rmst_data[7,]), 0.9)
+
+  result_m1 <- foreach(m1 = seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times), 
+                      .combine = 'cbind') %dopar% { 
+      best_m2 <- c()
+      opt_power <- 0
+      for( m2 in seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times))
         {
-          for (t1 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times))
+        proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & 
+                       (rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m2))
+        proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & 
+                       (rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m2))
+        if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
           {
-            proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > t1))
-            proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > t1))
-            if (proc_h0/sim_size < tar_a1 & proc_h1/sim_size >= tar_pow1_low )
-              {
-                result_t1 <- cbind(result_t1, c(m1, t1, proc_h0/sim_size, proc_h1/sim_size))
-              }    
+            opt_power <- proc_h1/sim_size
+            PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] <= m1)) / sim_size
+            PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ]  <= m1)) / sim_size
+            best_m2 <- c(m1, m2, PET0, PET1, proc_h0/sim_size, opt_power)
           }
         }
-      result_t1
+      return(best_m2)
       }
-
-    if (is.null(result_m1_t1)) {
-      # Return NULL when something goes wrong
-        return(NULL)
-      }
-
-    powerful_m1_t1 <- result_m1_t1[, which(result_m1_t1[4,] == max(result_m1_t1[4,]))]
-    #Find the most powerful m1,t1
-
-    if (t_low == -Inf | class(powerful_m1_t1)[1] == 'numeric') {  #powerful_m1_t1 is a 1*4 vector
-      bestmt <- powerful_m1_t1
+  powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
+  if (is.null(powerful_m1)) 
+    {   # Return NULL when something goes wrong
+      return(NULL)
     }
-    else {
-      bestmt <- powerful_m1_t1[, which(powerful_m1_t1[2,] == max(powerful_m1_t1[2,])) ]
-    } # return the result with the larges t1
-    # Among these most powerful, find the m1 with smallest absolute value 
-    m1 <- bestmt[1]
-    t1 <- bestmt[2]  # t1 = -Inf when simple RMST difference test
-
-    result_fin <- c()
-    result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% 
-      { 
-        m2 = m_low + i * search_step
-        opt_power <- 0
-        opt_m2 <- 0
-        opt_t2 <- 0
-        opt_mt <- c()
-        if (t1 == -Inf) 
-          {
-            proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) &
-                          (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2))
-            proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & 
-                          (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2))
-            if ( proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) 
-                {
-                  opt_power <- proc_h1/sim_size
-                  opt_m2 <- m2
-                  opt_t2 <- -Inf
-                  opt_mt <- c(opt_m2,opt_t2,proc_h0/sim_size,opt_power)
-                }
-            }
-      else 
-        {
-          for (t2 in seq(from = t_low, to = t_up, by = (t_up - t_low) /  search_times)) 
-            {
-              proc_h0 <- sum((rmst_h0_all[2, ] - rmst_h0_all[1, ] > m1) & (rmst_h0_all[2, ] > t1) &
-                            (rmst_h0_all[4, ] - rmst_h0_all[3, ] > m2) & (rmst_h0_all[4, ] > t2))     
-              proc_h1 <- sum((rmst_h1_all[2, ] - rmst_h1_all[1, ] > m1) & (rmst_h1_all[2, ] > t1) &
-                            (rmst_h1_all[4, ] - rmst_h1_all[3, ] > m2) & (rmst_h1_all[4, ] > t2))
-                  # return the best 
-              if ( proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) 
-                {
-                  opt_power <- proc_h1/sim_size
-                  opt_m2 <- m2
-                  opt_t2 <- t2
-                  opt_mt <- c(opt_m2, opt_t2, proc_h0/sim_size, opt_power)
-                }
-            }
-        }
-      opt_mt
-      }
-
-  if (is.null(result_fin)) 
+  else
     {
-      return(NULL)    # Return NULL when something goes wrong
+      powerful_m1 <- data.frame(t(powerful_m1))
+      colnames(powerful_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+      return(powerful_m1)
     }
-
-  powerful_fin <- result_fin[, which(result_fin[4,] == max(result_fin[4,]))]
-  if (t1 == -Inf | class(powerful_fin)[1] == 'numeric')
-    {
-      best_result <- powerful_fin
-    }
-  else 
-    {
-      best_result <- powerful_fin[ , which(powerful_fin[2,] == max(powerful_fin[2,])) ]
-    }    
-    return(data.frame(m1 = m1,
-                  t1 = t1,
-                  PET0 = 1 - bestmt[3],
-                  PET1 = 1 - bestmt[4],
-                  m2 = best_result[1],
-                  t2 = best_result[2],
-                  alpha = best_result[3],
-                  power = best_result[4]
-                  ))
 }
+
 
 
 
@@ -475,68 +398,45 @@ find_m_t_RMST <- function(m_low, t_low, t_up, rmst_data, search_times, search_st
 # This function help you find the Z1 > m1 & Z > m2 to control the overall power.
 # You need to tune tar_a1 and tar_pow1_low to control PET0 and PET1
 
-find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
-                          tar_a1, tar_pow1_low, tar_a2, sim_size) {
+find_m_logrank <- function( logrank_data, search_times, alpha, sim_size) 
+{
   z_stats_h0_int <-  logrank_data[1, ]
   z_stats_h1_int <-  logrank_data[2, ]
-  z_stats_h0_all <-  logrank_data[c(1, 3), ]
-  z_stats_h1_all <-  logrank_data[c(2, 4), ]          
-  result_m1 <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
-      m1 = m_low + i * search_step
-      result_t1 <- c()
-      proc_h0 <- sum(z_stats_h0_int > m1)
-      proc_h1 <- sum(z_stats_h1_int > m1)
-      if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a1 &
-          proc_h1/sim_size >= tar_pow1_low ) 
+  z_stats_h0_fin <-  logrank_data[3, ]
+  z_stats_h1_fin <-  logrank_data[4, ]
+
+  c_low <- quantile(logrank_data, 0.1)
+  c_up <- quantile(logrank_data, 0.9) 
+
+  result_m1 <- foreach(m1 = seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times), 
+                      .combine = 'cbind') %dopar% { 
+      best_m2 <- c()
+      opt_power <- 0
+      for( m2 in seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times))
         {
-          result_t1 <- c(m1,proc_h0/sim_size,proc_h1/sim_size)         
+        proc_h0 <- sum((z_stats_h0_int > m1) & (z_stats_h0_fin > m2))
+        proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
+        if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
+          {
+            opt_power <- proc_h1/sim_size
+            PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
+            PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
+            best_m2 <- c(m1, m2, PET0, PET1, proc_h0/sim_size, opt_power)
+          }
         }
-      result_t1
+      return(best_m2)
       }
-  powerful_m1 <- result_m1[, which(result_m1[3,] == max(result_m1[3,]))]
-    #Find the most powerful m1,t1
+  powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
   if (is.null(powerful_m1)) 
     {   # Return NULL when something goes wrong
       return(NULL)
     }
-  bestmt <- powerful_m1
-  m1 <- bestmt[1]
-  result_fin <- c()
-  result_fin <- foreach(i = 1:search_times, .combine = 'cbind') %dopar% { 
-      m2 = m_low + i * search_step
-      opt_alpha <- 1
-      opt_power <- 0
-      opt_m2 <- 0
-      opt_mt <- c()
-      proc_h0 <- sum((z_stats_h0_all[1, ] > m1) & (z_stats_h0_all[2, ]  > m2))
-      proc_h1 <- sum((z_stats_h1_all[1, ] > m1) & (z_stats_h1_all[2, ]  > m2))
-      if (proc_h0/sim_size > 0 & proc_h0/sim_size < tar_a2 & proc_h1/sim_size >= opt_power) {
-          opt_alpha <- proc_h0/sim_size
-          opt_power <- proc_h1/sim_size
-          opt_m2 <- m2
-          opt_mt <- c(opt_m2,opt_alpha,opt_power)
-        }
-      opt_mt
-  }
-  if (is.null(result_fin)) 
+  else
     {
-      return(NULL)
+      powerful_m1 <- data.frame(t(powerful_m1))
+      colnames(powerful_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+      return(powerful_m1)
     }
-  else if (class(result_fin)[1] == 'numeric') 
-    {
-      powerful_fin <- result_fin
-    }
-  else 
-    {
-      powerful_fin <- result_fin[, which(result_fin[3,] == max(result_fin[3,]))]
-    }
-  return(data.frame(m1 = m1,
-                  PET0 = 1 - bestmt[2],
-                  PET1 = 1 - bestmt[3],
-                  m2 = powerful_fin[1],
-                  alpha = powerful_fin[2],
-                  power = powerful_fin[3]
-                  ))
 }
 
 
@@ -550,8 +450,7 @@ find_m_logrank <- function(m_low, logrank_data, search_times, search_step,
 # overall sample size N. 
 # stated alpha.
 
-adp_grid_src <- function(rmst_int_h0, rmst_fin_h0, rmst_int_h1, rmst_fin_h1,
-                        mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, sim_size) 
+adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, sim_size) 
   {
       # Interim
       mu1 <- mu_cov_h1$mu[c(1,2)]
@@ -569,7 +468,11 @@ adp_grid_src <- function(rmst_int_h0, rmst_fin_h0, rmst_int_h1, rmst_fin_h1,
                           sigma = sigma)
           return (prob - tar_prob)
         }
-      
+
+      rmst_h0_int <- rmst_data[c(1,2) , ]
+      rmst_h1_int <- rmst_data[c(3,4) , ]
+      rmst_h0_fin <- rmst_data[c(5,6) , ]
+      rmst_h1_fin <- rmst_data[c(7,8) , ]
       #Grid search
     crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.01), .combine = 'cbind') %dopar%
       {   
@@ -593,10 +496,10 @@ adp_grid_src <- function(rmst_int_h0, rmst_fin_h0, rmst_int_h1, rmst_fin_h1,
             t2 <- uniroot(norm_2d, interval = c(0, 100), m = m2, 
                         mean = mu2, sigma = sigma2, tar_prob = p4_tar)$root
 
-            proc_h0 <- sum((rmst_int_h0[2, ] - rmst_int_h0[1, ] > m1) & (rmst_int_h0[2, ] > t1) &
-                      (rmst_fin_h0[2, ] - rmst_fin_h0[1, ] > m2) & (rmst_fin_h0[2, ] > t2))
-            proc_h1 <- sum((rmst_int_h1[2, ] - rmst_int_h1[1, ] > m1) & (rmst_int_h1[2, ] > t1) &
-                      (rmst_fin_h1[2, ] - rmst_fin_h1[1, ] > m2) & (rmst_fin_h1[2, ] > t2))
+            proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > t1) &
+                      (rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m2) & (rmst_h0_fin[2, ] > t2))
+            proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > t1) &
+                      (rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m2) & (rmst_h1_fin[2, ] > t2))
 
             if (m1 > 0 & m2 > 0 & proc_h0 / sim_size <= alpha 
                 & proc_h1 / sim_size > best_power)  #control alpha, find the most powerful set
@@ -610,10 +513,10 @@ adp_grid_src <- function(rmst_int_h0, rmst_fin_h0, rmst_int_h1, rmst_fin_h1,
       
       best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
       threshold <- best_res[1:4] # critical values
-      PET0 <- sum((rmst_int_h0[2, ] - rmst_int_h0[1, ] < best_res[1]) | 
-                  (rmst_int_h0[2, ] < best_res[2])) / sim_size
-      PET1 <- sum((rmst_int_h1[2, ] - rmst_int_h1[1, ] < best_res[1]) | 
-                  (rmst_int_h1[2, ] < best_res[2])) / sim_size
+      PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < best_res[1]) | 
+                  (rmst_h0_int[2, ] < best_res[2])) / sim_size
+      PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < best_res[1]) | 
+                  (rmst_h1_int[2, ] < best_res[2])) / sim_size
 
       return(data.frame(m1 = threshold[1],
                         t1 = threshold[2],
@@ -625,7 +528,5 @@ adp_grid_src <- function(rmst_int_h0, rmst_fin_h0, rmst_int_h1, rmst_fin_h1,
                         PET1 = PET1,
                         alpha = best_res[7],
                         power = best_res[8]))
-
-
 
     }
