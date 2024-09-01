@@ -544,3 +544,43 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
                         power = best_res[8]))
 
     }
+
+
+
+#-----------------------13. compare_line_plot----------------------
+# Used to draw line plot for 3m_comparison under different scenario
+# Input is the dataframe of 3m_comparison output. The order of variable is fixed
+
+
+compare_line_plot <- function(data, var_name) 
+  {
+    options(repr.plot.width = 20, repr.plot.height = 8)
+    a_power_delta <- data.frame(data[, c(1,2,3,4,5,6,7)])
+    colnames(a_power_delta) <- c(var_name,'LR_alpha','Rmst_alpha','Our_alpha',
+                          'LR_power', 'Rmst_power','Our_power')
+    a_power_long <- a_power_delta %>%
+    pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")
+    plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, color = variable)) +
+    geom_point(size = 3) +
+    geom_line(linewidth = 1) +
+    labs(x = var_name, y = "Value", color = "Variable",
+      title = 'Type I error and Power') +
+    theme_minimal(base_size = 18) + 
+    theme(plot.title = element_text(hjust = 0.5))
+
+    pet_delta <- data.frame(data[, c(1,8,9,10,11,12,13)])
+    colnames(pet_delta) <- c(var_name,'LR_PET0', 'Rmst_PET0', 'Our_PET0',
+                      'LR_PET1', 'Rmst_PET1', 'Our_PET1')
+    pet_long <- pet_delta %>%
+      pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")
+    plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, color = variable)) +
+        geom_point(size = 3) +
+        geom_line(linewidth = 1) +
+        labs(x = var_name, y = "Value", color = "Variable",
+        title = 'PET0 and PET1') +
+        theme_minimal(base_size = 18) + 
+        theme(plot.title = element_text(hjust = 0.5))
+
+    plot_grid(plot1, plot2, ncol = 2)
+
+  }
