@@ -549,12 +549,20 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
 
 #-----------------------13. compare_line_plot----------------------
 # Used to draw line plot for 3m_comparison under different scenario
-# Input is the dataframe of 3m_comparison output. The order of variable is fixed
+# Input is the dataframe of 3m_comparison output. ** The order of variable is fixed **
 
 
 compare_line_plot <- function(data, var_name) 
   {
     options(repr.plot.width = 20, repr.plot.height = 8)
+
+    color_palette <- c("Our_power" = "darkred", "Our_alpha" = "darkred", 
+                      "LR_power" = "lightgreen", "LR_alpha" = "lightgreen",
+                      "Rmst_power" = "lightblue", "Rmst_alpha" = "lightblue",
+                      "Our_PET0" = "darkred", "Our_PET1" = "darkred", 
+                      "LR_PET0" = "lightgreen", "LR_PET1" = "lightgreen",
+                      "Rmst_PET0" = "lightblue", "Rmst_PET1" = "lightblue")
+
     a_power_delta <- data.frame(data[, c(1,2,3,4,5,6,7)])
     colnames(a_power_delta) <- c(var_name,'LR_alpha','Rmst_alpha','Our_alpha',
                           'LR_power', 'Rmst_power','Our_power')
@@ -563,6 +571,7 @@ compare_line_plot <- function(data, var_name)
     plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, color = variable)) +
     geom_point(size = 3) +
     geom_line(linewidth = 1) +
+    scale_color_manual(values = color_palette) +
     labs(x = var_name, y = "Value", color = "Variable",
       title = 'Type I error and Power') +
     theme_minimal(base_size = 18) + 
@@ -576,6 +585,7 @@ compare_line_plot <- function(data, var_name)
     plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, color = variable)) +
         geom_point(size = 3) +
         geom_line(linewidth = 1) +
+        scale_color_manual(values = color_palette) +
         labs(x = var_name, y = "Value", color = "Variable",
         title = 'PET0 and PET1') +
         theme_minimal(base_size = 18) + 
