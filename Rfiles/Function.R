@@ -413,7 +413,7 @@ find_m_logrank <- function( logrank_data, search_times, alpha, sim_size)
   z_stats_h0_fin <-  logrank_data[3, ]
   z_stats_h1_fin <-  logrank_data[4, ]
 
-  c_low <- quantile(logrank_data, 0.2)
+  c_low <- quantile(logrank_data, 0.1)
   c_up <- quantile(logrank_data, 0.9) 
 
   result_m1 <- foreach(m1 = seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times), 
@@ -524,7 +524,12 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
           }
         best_gamma 
         }
-      
+
+      if (is.null(crit_val_res)) 
+      {   # Return NULL when something goes wrong
+        return(NULL)
+      }
+
       best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
       threshold <- best_res[1:4] # critical values
       PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < best_res[1]) | 
@@ -558,10 +563,10 @@ compare_line_plot <- function(data, var_name)
 
     color_palette <- c("Our_power" = "darkred", "Our_alpha" = "darkred", 
                       "LR_power" = "lightgreen", "LR_alpha" = "lightgreen",
-                      "Rmst_power" = "lightblue", "Rmst_alpha" = "lightblue",
+                      "Rmst_power" = "blue", "Rmst_alpha" = "blue",
                       "Our_PET0" = "darkred", "Our_PET1" = "darkred", 
                       "LR_PET0" = "lightgreen", "LR_PET1" = "lightgreen",
-                      "Rmst_PET0" = "lightblue", "Rmst_PET1" = "lightblue")
+                      "Rmst_PET0" = "blue", "Rmst_PET1" = "blue")
 
     a_power_delta <- data.frame(data[, c(1,2,3,4,5,6,7)])
     colnames(a_power_delta) <- c(var_name,'LR_alpha','Rmst_alpha','Our_alpha',

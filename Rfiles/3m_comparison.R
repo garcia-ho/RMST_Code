@@ -6,7 +6,7 @@
 
 
 m3_compare <- function(n, sim_size, acc_time, cen_time, interim, lambda_H0, 
-                        lambda_H1, H1_type, HR1, HR2, alpha) 
+                        lambda_H1, H1_type, HR1, HR2, alpha, change_time) 
 {
 
 data_C <- expo_gen_2stages(N = n * sim_size, acc_time = acc_time, lambda = lambda_H0, dist = 'exp', 
@@ -20,8 +20,8 @@ if (H1_type == 'PH'){
 }
 else if (H1_type == 'NPH'){
     data_E_H1 <- expo_gen_2stages(N = n * sim_size, acc_time = acc_time, lambda = lambda_H0, 
-                          dist = 'pcw_exp', cen_time = cen_time,HR1 = HR1, HR2 = HR2, 
-                          change_time = change_time, arm = 1, interim = interim)
+                            dist = 'pcw_exp', cen_time = cen_time, HR1 = HR1, HR2 = HR2, 
+                            change_time = change_time, arm = 1, interim = interim)
 }
 
 rmst_h0_int <- RMST_sim_cal(n = n,data_E = data_E_H0[ , c(2,3,1)], 
