@@ -576,6 +576,7 @@ compare_line_plot <- function(data, var_name)
     plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, color = variable)) +
     geom_point(size = 3) +
     geom_line(linewidth = 1) +
+    scale_y_continuous(breaks = c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1), limits = c(0, 1)) +
     scale_color_manual(values = color_palette) +
     labs(x = var_name, y = "Value", color = "Variable",
       title = 'Type I error and Power') +
@@ -587,9 +588,11 @@ compare_line_plot <- function(data, var_name)
                       'LR_PET1', 'Rmst_PET1', 'Our_PET1')
     pet_long <- pet_delta %>%
       pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")
+
     plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, color = variable)) +
         geom_point(size = 3) +
         geom_line(linewidth = 1) +
+        scale_y_continuous(limits = c(0, 1)) +
         scale_color_manual(values = color_palette) +
         labs(x = var_name, y = "Value", color = "Variable",
         title = 'PET0 and PET1') +
