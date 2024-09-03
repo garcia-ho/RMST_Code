@@ -581,7 +581,10 @@ compare_line_plot <- function(data, var_name)
     labs(x = var_name, y = "Value", color = "Variable",
       title = 'Type I error and Power') +
     theme_minimal(base_size = 18) + 
-    theme(plot.title = element_text(hjust = 0.5))
+    theme(plot.title = element_text(hjust = 0.5),
+          plot.background = element_rect(fill = "white", color = NA),
+          plot.margin = unit(c(1, 1, 1, 1), "cm"))
+
 
     pet_delta <- data.frame(data[, c(1,8,9,10,11,12,13)])
     colnames(pet_delta) <- c(var_name,'LR_PET0', 'Rmst_PET0', 'Our_PET0',
@@ -597,7 +600,9 @@ compare_line_plot <- function(data, var_name)
         labs(x = var_name, y = "Value", color = "Variable",
         title = 'PET0 and PET1') +
         theme_minimal(base_size = 18) + 
-        theme(plot.title = element_text(hjust = 0.5))
+        theme(plot.title = element_text(hjust = 0.5),
+        plot.background = element_rect(fill = "white", color = NA),
+        plot.margin = unit(c(1, 1, 1, 1), "cm"))
 
     plot_grid(plot1, plot2, ncol = 2)
 
