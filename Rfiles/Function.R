@@ -572,10 +572,18 @@ compare_line_plot <- function(data, var_name)
     colnames(a_power_delta) <- c(var_name,'LR_alpha','Rmst_alpha','Our_alpha',
                           'LR_power', 'Rmst_power','Our_power')
     a_power_long <- a_power_delta %>%
-    pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")
-    plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, color = variable)) +
+        pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")%>%
+        mutate(linetype_group = ifelse(variable %in% 
+            c("LR_alpha", "Rmst_alpha", "Our_alpha"), "Alpha", "Power"))
+
+    plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, 
+        color = variable, linetype = linetype_group)) +
     geom_point(size = 3) +
     geom_line(linewidth = 1) +
+    scale_linetype_manual(values = c("Alpha" = "solid", "Power" = "dotted")) +
+    labs( linetype = "Line Type", color = "Variable",
+          title = "Line Plot with Different Line Types") +
+
     scale_y_continuous(breaks = c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1), limits = c(0, 1)) +
     scale_color_manual(values = color_palette) +
     labs(x = var_name, y = "Value", color = "Variable",
@@ -583,26 +591,37 @@ compare_line_plot <- function(data, var_name)
     theme_minimal(base_size = 18) + 
     theme(plot.title = element_text(hjust = 0.5),
           plot.background = element_rect(fill = "white", color = NA),
-          plot.margin = unit(c(1, 1, 1, 1), "cm"))
+          plot.margin = unit(c(1, 1, 1, 1), "cm")) +
+    guides(linetype = guide_legend(override.aes = list(color = "black")),
+        color = guide_legend(override.aes = list(linetype = "solid")))
 
-
+#_________next plot_________
     pet_delta <- data.frame(data[, c(1,8,9,10,11,12,13)])
     colnames(pet_delta) <- c(var_name,'LR_PET0', 'Rmst_PET0', 'Our_PET0',
                       'LR_PET1', 'Rmst_PET1', 'Our_PET1')
     pet_long <- pet_delta %>%
-      pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")
+        pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")%>%
+        mutate(linetype_group = ifelse(variable %in% 
+              c("LR_PET0", "Rmst_PET0", "Our_PET0"), "PET0", "PET1"))
 
-    plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, color = variable)) +
+    plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, 
+        color = variable, linetype = linetype_group)) +
         geom_point(size = 3) +
         geom_line(linewidth = 1) +
+        scale_linetype_manual(values = c("PET0" = "solid", "PET1" = "dotted")) +
+        labs( linetype = "Line Type", color = "Variable",
+          title = "Line Plot with Different Line Types") +
+
         scale_y_continuous(limits = c(0, 1)) +
         scale_color_manual(values = color_palette) +
         labs(x = var_name, y = "Value", color = "Variable",
         title = 'PET0 and PET1') +
         theme_minimal(base_size = 18) + 
         theme(plot.title = element_text(hjust = 0.5),
-        plot.background = element_rect(fill = "white", color = NA),
-        plot.margin = unit(c(1, 1, 1, 1), "cm"))
+              plot.background = element_rect(fill = "white", color = NA),
+              plot.margin = unit(c(1, 1, 1, 1), "cm")) + 
+        guides(linetype = guide_legend(override.aes = list(color = "black")),
+              color = guide_legend(override.aes = list(linetype = "solid")))
 
     plot_grid(plot1, plot2, ncol = 2)
 
