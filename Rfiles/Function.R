@@ -463,8 +463,9 @@ find_m_logrank <- function( logrank_data, search_times, alpha, sim_size)
 # interim sample size n.
 # overall sample size N. 
 # stated alpha.
+# Type “Simple” means simple RMST, "Complex" means our method
 
-adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, sim_size) 
+adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, sim_size, type) 
   {
       # Interim
       mu1 <- mu_cov_h1$mu[c(1,2)]
@@ -488,27 +489,37 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
       #Grid search
-    crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.01), .combine = 'cbind') %dopar%
+      crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.01), .combine = 'cbind') %dopar%
       {   
         best_gamma <- c()
         best_power <- 0
         for (gamma in seq(0, 1, by = 0.01))
           {
-            p1_tar <- exp(-gamma * (int_n / fin_n))            # P(E1-C1 > m1)
-            p2_tar <- lambda * exp(-gamma * (int_n / fin_n))   # P(E1-C1 > m1, E1 > t1)
+            p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
+            p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)
             p3_tar <- exp(-gamma * ( fin_n / fin_n))            # P(E2-C2 > m2)
-            p4_tar <- lambda * exp(-gamma * (fin_n / fin_n))   # P(E2-C2 > m2, E2 > t2)
+            p4_tar <- lambda * exp(-gamma * (fin_n / fin_n))    # P(E2-C2 > m2, E2 > t2)
 
             # First equation P(E1-C1 > m1) = p1_tar
             m1 <- qnorm(1 - p1_tar, mean = mu1[1], sd = sqrt(sigma1[1, 1]))
-            # Second equation P(E1-C1 > m1 & E1 > t1) = p2_tar
-            t1 <- uniroot(norm_2d, interval = c(0, 100), m = m1, 
-                          mean = mu1, sigma = sigma1, tar_prob = p2_tar)$root
             # Third equation
             m2 <- qnorm(1 - p3_tar, mean = mu2[1], sd = sqrt(sigma2[1, 1])) 
-            # Forth equation
-            t2 <- uniroot(norm_2d, interval = c(0, 100), m = m2, 
+
+            if (type == 'Simple')
+            {
+              t1 <- 0
+              t2 <- 0
+            }
+
+            else if (type == 'Complex') 
+            {
+              # Second equation P(E1-C1 > m1 & E1 > t1) = p2_tar
+              t1 <- uniroot(norm_2d, interval = c(0, 100), m = m1, 
+                          mean = mu1, sigma = sigma1, tar_prob = p2_tar)$root
+              # Forth equation
+              t2 <- uniroot(norm_2d, interval = c(0, 100), m = m2, 
                         mean = mu2, sigma = sigma2, tar_prob = p4_tar)$root
+            }
 
             proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > t1) &
                       (rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m2) & (rmst_h0_fin[2, ] > t2))
