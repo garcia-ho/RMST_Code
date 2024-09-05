@@ -131,7 +131,7 @@ The performances of three methods are compared with different Hazard Ratio(under
 ### Under Early Difference Scenario
 The survival function of two groups are shown below: 
 <p align="center"> 
-<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="500" height="300">
+<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="450" height="300">
 </p>
 
 The comparison of three methods under different setting is shown below:  
@@ -140,7 +140,10 @@ The comparison of three methods under different setting is shown below:
 The graph shows us that our method have higher power while preserving the type I error under different early difference settings. Higher PET0 and relatively acceptable sacrifice of PET1. 
 
 ### Robustness
-The following graph shows the robustness of 
+The following graph shows the robustness of three methods when the real hazard ratio drift away from the assumed HR = 0.667. We conduct the same critical value calculated by $H1:\ \frac{\lambda_E}{\lambda_C} = 0.67$ on other data generated under different hazard ratio. The change of Power and PET1 is shown below(The PET0 and type I error should be consistant across different HR).  
+
+![Robustness under HR](figures/Robustness/diff_HR_PH.png)  
+
 
 
 

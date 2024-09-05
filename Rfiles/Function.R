@@ -601,6 +601,7 @@ compare_line_plot <- function(data, var_name)
         color = variable, linetype = linetype_group)) +
     geom_point(size = 3) +
     geom_line(linewidth = 1) +
+    #geom_vline(xintercept = 0.67, color = "red", linetype = "dashed", size = 1) +
     scale_linetype_manual(values = c("Alpha" = "solid", "Power" = "dotted")) +
     labs( linetype = "Line Type", color = "Variable",
           title = "Line Plot with Different Line Types") +
@@ -629,6 +630,7 @@ compare_line_plot <- function(data, var_name)
         color = variable, linetype = linetype_group)) +
         geom_point(size = 3) +
         geom_line(linewidth = 1) +
+        #geom_vline(xintercept = 0.67, color = "red", linetype = "dashed", size = 1) +
         scale_linetype_manual(values = c("PET0" = "solid", "PET1" = "dotted")) +
         labs( linetype = "Line Type", color = "Variable",
           title = "Line Plot with Different Line Types") +
