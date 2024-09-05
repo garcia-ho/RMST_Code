@@ -538,7 +538,16 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
 
       if (is.null(crit_val_res)) 
       {   # Return NULL when something goes wrong
-        return(NULL)
+        return(data.frame(m1 = 0,
+                        t1 = 0,
+                        m2 = 0,
+                        t2 = 0,
+                        lambda = 0,
+                        gamma = 0,
+                        PET0 = 0,
+                        PET1 = 0,
+                        alpha = 0,
+                        power = 0))
       }
 
       best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
@@ -586,6 +595,7 @@ compare_line_plot <- function(data, var_name)
         pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")%>%
         mutate(linetype_group = ifelse(variable %in% 
             c("LR_alpha", "Rmst_alpha", "Our_alpha"), "Alpha", "Power"))
+    a_power_long <- a_power_long %>% filter(value != 0)   # 0 means could not find critical values
 
     plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, 
         color = variable, linetype = linetype_group)) +
@@ -594,7 +604,6 @@ compare_line_plot <- function(data, var_name)
     scale_linetype_manual(values = c("Alpha" = "solid", "Power" = "dotted")) +
     labs( linetype = "Line Type", color = "Variable",
           title = "Line Plot with Different Line Types") +
-
     scale_y_continuous(breaks = c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1), limits = c(0, 1)) +
     scale_color_manual(values = color_palette) +
     labs(x = var_name, y = "Value", color = "Variable",
@@ -614,6 +623,7 @@ compare_line_plot <- function(data, var_name)
         pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")%>%
         mutate(linetype_group = ifelse(variable %in% 
               c("LR_PET0", "Rmst_PET0", "Our_PET0"), "PET0", "PET1"))
+    pet_long <- pet_long %>% filter(value != 0) 
 
     plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, 
         color = variable, linetype = linetype_group)) +

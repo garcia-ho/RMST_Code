@@ -55,8 +55,10 @@ best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 1000,
 best_rmst <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                 int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, type = 'Simple')
 
-return(list(PET0 = c(best_lr$PET0, best_rmst$PET0, best_our$PET0),
+result_list <- list(PET0 = c(best_lr$PET0, best_rmst$PET0, best_our$PET0),
             PET1 = c(best_lr$PET1, best_rmst$PET1, best_our$PET1),
             alpha = c(best_lr$alpha, best_rmst$alpha, best_our$alpha),
-            power = c(best_lr$power, best_rmst$power, best_our$power)))
+            power = c(best_lr$power, best_rmst$power, best_our$power))
+
+return(result_list)
 }
