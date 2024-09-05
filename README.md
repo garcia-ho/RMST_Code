@@ -120,14 +120,19 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 
 ## Result
 ### Under Proportional Hazard Scenario  
-We used $\frac{\lambda{E}}{\lambda{C}}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate r = 90 (patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  We compared the performance of three methods with different Hazard Ratio(under H1) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
+We used $\frac{\lambda{E}}{\lambda{C}}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate r = 90 (patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
+The performances of three methods are compared with different Hazard Ratio(under H1) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
 
-![Result Under PH](figures/Comparison/PH.png) 
+<p align="center"> 
+<img src="figures/Comparison/PH.png" alt="Result Under PH" width="700" height="600">
+</p>
 
 
 ### Under Early Difference Scenario
-The survival function of two groups are shown below:  
+The survival function of two groups are shown below: 
+<p align="center"> 
 <img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="500" height="350">
+</p>
 
 The comparison of three methods under different setting is shown below:  
 ![Result Under Early Difference Scenario](figures/Comparison/Early_diff.png)  
