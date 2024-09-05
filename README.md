@@ -117,7 +117,6 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 
 
 ****
-
 ## Result
 ### Under Proportional Hazard Scenario  
 We used $\frac{\lambda{E}}{\lambda{C}}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate r = 90 (patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
@@ -131,7 +130,7 @@ The performances of three methods are compared with different Hazard Ratio(under
 ### Under Early Difference Scenario
 The survival function of two groups are shown below: 
 <p align="center"> 
-<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="450" height="300">
+<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="420" height="300">
 </p>
 
 The comparison of three methods under different setting is shown below:  
@@ -139,6 +138,9 @@ The comparison of three methods under different setting is shown below:
 
 The graph shows us that our method have higher power while preserving the type I error under different early difference settings. Higher PET0 and relatively acceptable sacrifice of PET1. 
 
+
+
+****
 ### Robustness
 The following graph shows the robustness of three methods when the real hazard ratio drift away from the assumed HR = 0.667. We conduct the same critical value calculated by $H1:\ \frac{\lambda_E}{\lambda_C} = 0.67$ on other data generated under different hazard ratio. The change of Power and PET1 is shown below(The PET0 and type I error should be consistant across different HR).  
 
