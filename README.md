@@ -142,7 +142,7 @@ The graph shows us that our method have higher power while preserving the type I
 
 ****
 ### Robustness
-The following graph shows the robustness of three methods when the real hazard ratio drift away from the assumed HR = 0.667. We conduct the same critical value calculated by $H1:\ \frac{\lambda_E}{\lambda_C} = 0.67$ on other data generated under different hazard ratio. The change of Power and PET1 is shown below(The PET0 and type I error should be consistant across different HR).  
+The following graph shows the robustness of three methods when the real hazard ratio drift away from the assumed HR = 0.667. We conduct the same critical value calculated by $H1:\ \lambda_E/\lambda_C = 0.67$ on other data generated under different hazard ratio. The change of Power and PET1 is shown below(The PET0 and type I error should be consistant across different HR).  The robustness of our method is competitive compared with log-rank test.
 
 ![Robustness under HR](figures/Robustness/diff_HR_PH.png)  
 
