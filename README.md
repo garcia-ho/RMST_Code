@@ -120,8 +120,8 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 
 ## Result
 ### Under Early Difference Scenario
-The survival function of two groups are shown below:
-<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="200" height="150">
+The survival function of two groups are shown below:  
+<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="500" height="350">
 
 The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate with a fixed overall sample size N. The longer the interim period, the larger interim sample size n. 
 ![Result Under Early Difference Scenario](figures/Comparison/Early_diff.png)  
