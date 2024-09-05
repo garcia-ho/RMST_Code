@@ -117,6 +117,18 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 
 
 ****
+
+## Result
+### Under Early Difference Scenario
+
+   The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate with a fixed overall sample size N. The longer the interim period, the larger sample size of interim period. ![Result Under Early Difference Scenario](figures/Comparison/Early_diff.png)  \\
+
+   The graph shows us that our method hava higher power while preserving the type I error under different early difference settings.
+
+
+
+
+****
 All codes are in R. Presented in notebook R kernel.  
 All functions that used for simulation is stored at [Function.R](Rfiles/Function.R).  
 The simulation processes of single stage and two stages are stored at different ipynb files.
