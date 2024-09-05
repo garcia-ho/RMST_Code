@@ -124,14 +124,14 @@ We used $\frac{\lambda{E}}{\lambda{C}}= 0.67$ as base setting. The Type I error,
 The performances of three methods are compared with different Hazard Ratio(under H1) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
 
 <p align="center"> 
-<img src="figures/Comparison/PH.png" alt="Result Under PH" width="700" height="600">
+<img src="figures/Comparison/PH.png" alt="Result Under PH" width="900" height="600">
 </p>
 
 
 ### Under Early Difference Scenario
 The survival function of two groups are shown below: 
 <p align="center"> 
-<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="500" height="350">
+<img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="500" height="300">
 </p>
 
 The comparison of three methods under different setting is shown below:  
