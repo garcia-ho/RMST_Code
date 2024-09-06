@@ -465,7 +465,10 @@ find_m_logrank <- function( logrank_data, search_times, alpha, sim_size)
 # stated alpha.
 # Type “Simple” means simple RMST, "Complex" means our method
 
-adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, sim_size, type) 
+# _______________ If power is given, it will retern critical value with min E(N)_________________
+
+adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, 
+                        sim_size, type, alpha, power = NULL) 
   {
       # Interim
       mu1 <- mu_cov_h1$mu[c(1,2)]
@@ -526,12 +529,30 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
             proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > t1) &
                       (rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m2) & (rmst_h1_fin[2, ] > t2))
 
-            if (m1 > 0 & m2 > 0 & proc_h0 / sim_size <= alpha 
+            if (is.null(power))
+            {
+              if (m1 > 0 & m2 > 0 & proc_h0 / sim_size <= alpha 
                 & proc_h1 / sim_size > best_power)  #control alpha, find the most powerful set
               {
                 best_power <- proc_h1 / sim_size
                 best_gamma <- c(m1, t1, m2, t2, lambda, gamma, proc_h0/sim_size, proc_h1/sim_size)
               }
+            }
+            
+            # If the power is given, we return the result with minimal E(N)
+            else
+            {
+              if (m1 > 0 & m2 > 0 & proc_h0 / sim_size <= alpha 
+                & proc_h1 / sim_size >= power)  #control alpha, find the most powerful set
+              {
+                PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < m1) | 
+                      (rmst_h0_int[2, ] < t1)) / sim_size
+                PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < m1) | 
+                      (rmst_h1_int[2, ] < t1)) / sim_size
+                best_gamma <- cbind(best_gamma, c(m1, t1, m2, t2, 
+                              lambda, gamma, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
+              }
+            }
           }
         best_gamma 
         }
@@ -550,14 +571,16 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
                         power = 0))
       }
 
-      best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
-      threshold <- best_res[1:4] # critical values
-      PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < best_res[1]) | 
+      if (is.null(power))  # find the most powerful critical values
+      {
+        best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
+        threshold <- best_res[1:4] # critical values
+        PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < best_res[1]) | 
                   (rmst_h0_int[2, ] < best_res[2])) / sim_size
-      PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < best_res[1]) | 
+        PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < best_res[1]) | 
                   (rmst_h1_int[2, ] < best_res[2])) / sim_size
 
-      return(data.frame(m1 = threshold[1],
+        return(data.frame(m1 = threshold[1],
                         t1 = threshold[2],
                         m2 = threshold[3],
                         t2 = threshold[4],
@@ -567,8 +590,22 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, alpha, s
                         PET1 = PET1,
                         alpha = best_res[7],
                         power = best_res[8]))
+      }
 
-    }
+      else # find the min E(N) critical values
+      {
+          # calculate E(N)
+          PET <- (crit_val_res[7, ] + crit_val_res[8, ]) / 2
+          crit_val_res <- rbind (crit_val_res, PET * int_n + (1 - PET) * fin_n)
+          best_res <- crit_val_res[, which(crit_val_res[11, ] == min(crit_val_res[11, ]))]
+          best_res <- data.frame(best_res)
+          colnames(best_res) <- c('m1', 't1', 'm2', 't2', 'lambda', 'gamma',
+                                  'PET0', 'PET1', 'alpha', 'power', 'EN')
+          return(best_res)
+      }
+  }
+
+ 
 
 
 
