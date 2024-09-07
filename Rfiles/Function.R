@@ -597,6 +597,10 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
           best_res <- data.frame(t(best_res))
           colnames(best_res) <- c('m1', 't1', 'm2', 't2', 'lambda', 'gamma',
                                   'PET0', 'PET1', 'alpha', 'power', 'EN')
+          
+          if (method == 'Simple') {  # lambda is not working for simple RMST
+         best_res <- best_res[1, ]
+      }
           return(best_res)
       }
   }
