@@ -468,7 +468,7 @@ find_m_logrank <- function( logrank_data, search_times, alpha, sim_size)
 # _______________ If power is given, it will retern critical value with min E(N)_________________
 
 adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, 
-                        sim_size, type, alpha, power = NULL) 
+                        sim_size, method, alpha, power = NULL) 
   {
       # Interim
       mu1 <- mu_cov_h1$mu[c(1,2)]
@@ -508,13 +508,13 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             # Third equation
             m2 <- qnorm(1 - p3_tar, mean = mu2[1], sd = sqrt(sigma2[1, 1])) 
 
-            if (type == 'Simple')
+            if (method == 'Simple')
             {
               t1 <- 0
               t2 <- 0
             }
 
-            else if (type == 'Complex') 
+            else if (method == 'Complex') 
             {
               # Second equation P(E1-C1 > m1 & E1 > t1) = p2_tar
               t1 <- uniroot(norm_2d, interval = c(0, 100), m = m1, 

@@ -47,13 +47,13 @@ z_stats_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)],  data_E = data_E_H1
 logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin)
 
 best_our <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
-                int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, type = 'Complex')
+                int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, method = 'Complex')
 best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 1000,
                  alpha = alpha, sim_size = sim_size)
 # best_rmst <- find_m_t_RMST(rmst_data = rmst_data, search_times = 1000, 
 #                  alpha = alpha, sim_size = sim_size)
 best_rmst <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
-                int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, type = 'Simple')
+                int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, method = 'Simple')
 
 result_list <- list(PET0 = c(best_lr$PET0, best_rmst$PET0, best_our$PET0),
             PET1 = c(best_lr$PET1, best_rmst$PET1, best_our$PET1),
