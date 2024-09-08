@@ -406,7 +406,11 @@ find_m_t_RMST <- function(rmst_data, search_times, alpha, sim_size) {
 # This function help you find the Z1 > m1 & Z > m2 to control the overall power.
 # You need to tune tar_a1 and tar_pow1_low to control PET0 and PET1
 
-find_m_logrank <- function( logrank_data, search_times, alpha, sim_size) 
+# ________power is given, will search for the critical value with min(E(N))__________
+# When power is given, int_n and fin_n are required for E(N) calculation
+
+find_m_logrank <- function(logrank_data, search_times, int_n = NULL, fin_n = NULL,  
+                          alpha, sim_size, power = NULL) 
 {
   z_stats_h0_int <-  logrank_data[1, ]
   z_stats_h1_int <-  logrank_data[2, ]
@@ -420,37 +424,67 @@ find_m_logrank <- function( logrank_data, search_times, alpha, sim_size)
                       .combine = 'cbind') %dopar% { 
       best_m2 <- c()
       opt_power <- 0
-      for( m2 in seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times))
+      for(m2 in seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times))
         {
         proc_h0 <- sum((z_stats_h0_int > m1) & (z_stats_h0_fin > m2))
         proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
-        if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
+
+        if (is.null(power))
           {
-            opt_power <- proc_h1/sim_size
-            PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
-            PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-            best_m2 <- c(m1, m2, PET0, PET1, proc_h0/sim_size, opt_power)
+            if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
+            {
+              opt_power <- proc_h1/sim_size
+              PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
+              PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
+              best_m2 <- c(m1, m2, PET0, PET1, proc_h0/sim_size, opt_power)
+            }
+          }
+
+        else
+          {
+            if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= power) 
+              {
+                PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
+                PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
+                best_m2 <- cbind(best_m2, c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
+              }
           }
         }
       return(best_m2)
-      }
-    powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
-    if (is.null(powerful_m1)) 
-      {   # Return NULL when something goes wrong
-        return(NULL)
-      }
-
-    if(is.null(dim(powerful_m1)))
-      {
+    }
+    
+  if(is.null(power))
+    {
+      if (is.null(result_m1)) 
+        {   # Return NULL when something goes wrong
+          return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0))
+        }
+      powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
+      if(is.null(dim(powerful_m1))){
         opt_pet0_m1 <- powerful_m1
       }
-    else
-      {  # find the largest PET0 if multiply solution exist
+      else{  # find the largest PET0 if multiply solution exist
         opt_pet0_m1 <- powerful_m1[, which(powerful_m1[3, ] == max(powerful_m1[3, ]))]
       }
       opt_pet0_m1 <- data.frame(t(opt_pet0_m1))
       colnames(opt_pet0_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
       return(opt_pet0_m1)
+    }
+
+  else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
+  {
+    if (is.null(result_m1)) 
+      {   # Return NULL when something goes wrong
+        return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, EN = NA))
+      }
+    PET <- (result_m1[3, ] + result_m1[4, ]) / 2
+    result_m1 <- rbind(result_m1, PET * int_n + (1 - PET) * fin_n)
+    best_res <- result_m1[, which(result_m1[7, ] == min(result_m1[7, ]))]
+    best_res <- data.frame(t(best_res))
+    colnames(best_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power', 'EN')
+    return(best_res)
+  }
+
 }
 
 
@@ -599,8 +633,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
                                   'PET0', 'PET1', 'alpha', 'power', 'EN')
           
           if (method == 'Simple') {  # lambda is not working for simple RMST
-         best_res <- best_res[1, ]
-      }
+            best_res <- best_res[1, ]
+          }
           return(best_res)
       }
   }
