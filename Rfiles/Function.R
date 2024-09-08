@@ -38,9 +38,11 @@ cal_event_int <- function(row) {
   entry_time_all <- row[2]
   if (entry_time_all >= interim_val) { # Not in the interim
     return(c(0,0))
-  } else if (entry_time_all + min(survival_time_all, censor_time_fin) < interim_val) {
+  } 
+  else if (entry_time_all + min(survival_time_all, censor_time_fin) < interim_val) {
     return(c(min(survival_time_all, censor_time_fin), 1))
-  } else if (entry_time_all + min(survival_time_all, censor_time_fin) > interim_val &&
+  } 
+  else if (entry_time_all + min(survival_time_all, censor_time_fin) > interim_val &&
            entry_time_all < interim_val) {
     return(c(interim_val - entry_time_all, 0))
   }
@@ -52,12 +54,12 @@ cal_event_fin <- function(row) {
   censor_time_fin <- row[3]
   obs_time_int <- row[5]
   event_int <- row[6]
-if(entry_time_all >= interim_val) {  # censoring in stage II
+if(entry_time_all >= interim_val) {  
   return(c(min(survival_time_all,censor_time_fin), 
           as.integer(survival_time_all <= censor_time_fin)))
 }
-else if (event_int == 0 && obs_time_int != 0) { # censoring in interim
-  return(c(min(survival_time_all,censor_time_fin), 
+else if (event_int == 0 && obs_time_int != 0) { 
+  return(c(min(survival_time_all, censor_time_fin), 
           as.integer(survival_time_all <= censor_time_fin)))
 }
 else {
@@ -482,6 +484,9 @@ find_m_logrank <- function(logrank_data, search_times, int_n = NULL, fin_n = NUL
     best_res <- result_m1[, which(result_m1[7, ] == min(result_m1[7, ]))]
     best_res <- data.frame(t(best_res))
     colnames(best_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power', 'EN')
+    if (dim(best_res)[1] > 1) {     # multiple solution, return the first one
+       best_res <- best_res[1, ]
+    }
     return(best_res)
   }
 
@@ -599,22 +604,14 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
                         gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0))
           }
         best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
-        threshold <- best_res[1:4] # critical values
         PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < best_res[1]) | 
                   (rmst_h0_int[2, ] < best_res[2])) / sim_size
         PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < best_res[1]) | 
                   (rmst_h1_int[2, ] < best_res[2])) / sim_size
 
-        return(data.frame(m1 = threshold[1],
-                        t1 = threshold[2],
-                        m2 = threshold[3],
-                        t2 = threshold[4],
-                        lambda = best_res[5],
-                        gamma = best_res[6],
-                        PET0 = PET0,
-                        PET1 = PET1,
-                        alpha = best_res[7],
-                        power = best_res[8]))
+        return(data.frame(m1 = best_res[1], t1 = best_res[2], m2 = best_res[3],
+                        t2 = best_res[4], lambda = best_res[5], gamma = best_res[6],
+                        PET0 = PET0, PET1 = PET1, alpha = best_res[7], power = best_res[8]))
       }
 
       else # find the min E(N) critical values
