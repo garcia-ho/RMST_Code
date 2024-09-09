@@ -341,58 +341,69 @@ mu_cov_mc <- function(rmst_int, rmst_fin, sim_size){
 
 
 #------------------ 10. find_m_t_RMST ------------------
-# Grid searching loop Works for simple RMST difference test (E1 - C1 > m1 & E2 - C2 > m2)
+# Grid searching loop Works for simple RMST difference test (E - C > m & E > t)
 # Given rmst data of interim and all, find the best m1, m2 for 
 # n need to be given in this loop
+# Method = 'Simple' means the rejection is only (E - C > m)
 
 
-find_m_t_RMST <- function(rmst_data, search_times, alpha, sim_size) {
-  rmst_h0_int <- rmst_data[c(1,2) , ]
-  rmst_h1_int <- rmst_data[c(3,4) , ]
-  rmst_h0_fin <- rmst_data[c(5,6) , ]
-  rmst_h1_fin <- rmst_data[c(7,8) , ]
+find_m_t_RMST <- function(rmst_h0_fin, rmst_h1_fin, search_times, alpha, sim_size, method) 
+{
+  m_low <- 0  #superiority test
+  m_up <- quantile((rmst_h1_fin[2,] - rmst_h1_fin[1,]), 0.8)
 
-  c_low <- 0  #superiority test
-  c_up <- quantile((rmst_data[8,] - rmst_data[7,]), 0.9)
-
-  result_m1 <- foreach(m1 = seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times), 
+  if (method == 'Complex'){
+    t_low <- quantile(rmst_h1_fin[1,], 0.2)
+    t_up <-  quantile(rmst_h1_fin[2,], 0.8)
+  }
+  
+  result_m1 <- foreach(m = seq(from = m_low, to = m_up, by = (m_up - m_low) / search_times), 
                       .combine = 'cbind') %dopar% { 
-      best_m2 <- c()
-      opt_power <- 0
-      for( m2 in seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times))
+      if (method == 'Simple'){
+        t <- 0
+        proc_h0 <- sum((rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m))
+        proc_h1 <- sum((rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m))
+        if (proc_h0/sim_size < alpha){
+          return(c(m, t, proc_h0 / sim_size, proc_h1 / sim_size))
+        }
+        else{
+          return(c(0,0,0,0))
+        }
+      }
+
+      else if (method == 'Complex'){
+        best_t <- c()
+        opt_power <- 0
+        for( t in seq(from = t_low, to = t_up, by = (t_up - t_low) / search_times))
         {
-        proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & 
-                       (rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m2))
-        proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & 
-                       (rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m2))
-        if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
-          {
+          proc_h0 <- sum((rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m) & 
+                       (rmst_h0_fin[2, ] > t))
+          proc_h1 <- sum((rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m) & 
+                       (rmst_h1_fin[2, ] > t))
+        if (proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) {
             opt_power <- proc_h1/sim_size
-            PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] <= m1)) / sim_size
-            PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ]  <= m1)) / sim_size
-            best_m2 <- c(m1, m2, PET0, PET1, proc_h0/sim_size, opt_power)
+            best_t <- c(m, t, proc_h0/sim_size, opt_power)
           }
         }
-      return(best_m2)
+      return(best_t)
       }
-  powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
+    }
 
-  if (is.null(powerful_m1)) 
-    {   # Return NULL when something goes wrong
+  if (is.null(result_m1)) {   # Return NULL when something goes wrong
       return(NULL)
     }
 
-  if(is.null(dim(powerful_m1)))
-    {
+  powerful_m1 <- result_m1[, which(result_m1[4, ] == max(result_m1[4, ]))]
+
+  if(is.null(dim(powerful_m1))){
       opt_pet0_m1 <- powerful_m1
     }
-  else
-    {  # find the largest PET0 if multiply solution exist
-      opt_pet0_m1 <- powerful_m1[, which(powerful_m1[3, ] == max(powerful_m1[3, ]))]
+  else{  # find the largest m if multiply solution exist
+      opt_pet0_m1 <- powerful_m1[ , which(powerful_m1[1, ] == max(powerful_m1[1, ]))]
     }
   
     opt_pet0_m1 <- data.frame(t(opt_pet0_m1))
-    colnames(opt_pet0_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+    colnames(opt_pet0_m1) <- c('m', 't', 'alpha', 'power')
     return(opt_pet0_m1)
 }
 
