@@ -546,7 +546,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       {   
         best_gamma <- c()
         best_power <- 0
-        for (gamma in seq(0, 4, by = 0.04))
+        for (gamma in seq(0, 1, by = 0.01))
           {
             p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
             p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)
