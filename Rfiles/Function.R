@@ -444,7 +444,7 @@ find_m_logrank <- function(logrank_data, search_times, int_n = NULL, fin_n = NUL
 
         if (is.null(power))
           {
-            if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
+            if (proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
             {
               opt_power <- proc_h1/sim_size
               PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
@@ -488,13 +488,17 @@ find_m_logrank <- function(logrank_data, search_times, int_n = NULL, fin_n = NUL
   {
     if (is.null(result_m1)) 
       {   # Return NULL when something goes wrong
-        return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, EN = NA))
+        return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
+              EN0 = NA, EN1 = NA, EN = NA))
       }
-    PET <- (result_m1[3, ] + result_m1[4, ]) / 2
-    result_m1 <- rbind(result_m1, PET * int_n + (1 - PET) * fin_n)
-    best_res <- result_m1[, which(result_m1[7, ] == min(result_m1[7, ]))]
+    result_m1 <- rbind (result_m1, result_m1[3, ]  * int_n + 
+                                (1 - result_m1[3, ]) * fin_n)
+    result_m1 <- rbind (result_m1, result_m1[4, ] * int_n + 
+                                (1 - result_m1[4, ]) * fin_n)
+    result_m1 <- rbind (result_m1, colMeans(rbind(result_m1[7, ], result_m1[8, ])))
+    best_res <- result_m1[, which(result_m1[9, ] == min(result_m1[9, ]))]
     best_res <- data.frame(t(best_res))
-    colnames(best_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power', 'EN')
+    colnames(best_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power', 'EN0', 'EN1', 'EN')
     if (dim(best_res)[1] > 1) {     # multiple solution, return the first one
        best_res <- best_res[1, ]
     }
@@ -625,20 +629,26 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
                         PET0 = PET0, PET1 = PET1, alpha = best_res[7], power = best_res[8]))
       }
 
-      else # find the min E(N) critical values
+      else # find the min E(N)|H0 critical values
       {   
           if (is.null(crit_val_res)) 
           {   # Return NULL when something goes wrong
             return(data.frame(m1 = 0, t1 = 0, m2 = 0, t2 = 0, lambda = 0,
-                        gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, EN = NA))
+                        gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
+                        EN0 = NA, EN1 = NA, EN = NA))
           }
           # calculate E(N)
           PET <- (crit_val_res[7, ] + crit_val_res[8, ]) / 2
-          crit_val_res <- rbind (crit_val_res, PET * int_n + (1 - PET) * fin_n)
-          best_res <- crit_val_res[, which(crit_val_res[11, ] == min(crit_val_res[11, ]))]
+          crit_val_res <- rbind (crit_val_res, crit_val_res[7, ]  * int_n + 
+                                (1 - crit_val_res[7, ] ) * fin_n)
+          crit_val_res <- rbind (crit_val_res, crit_val_res[8, ] * int_n + 
+                                (1 - crit_val_res[8, ]) * fin_n)
+          crit_val_res <- rbind (crit_val_res, PET * int_n + (1-PET) * fin_n)
+          # min EN
+          best_res <- crit_val_res[, which(crit_val_res[13, ] == min(crit_val_res[13, ]))] 
           best_res <- data.frame(t(best_res))
           colnames(best_res) <- c('m1', 't1', 'm2', 't2', 'lambda', 'gamma',
-                                  'PET0', 'PET1', 'alpha', 'power', 'EN')
+                                  'PET0', 'PET1', 'alpha', 'power', 'EN0', 'EN1', 'EN')
           
           if (method == 'Simple') {  # lambda is not working for simple RMST
             best_res <- best_res[1, ]

@@ -48,7 +48,7 @@ logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1
 
 best_our <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                 int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, method = 'Complex')
-best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 1000,
+best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 500,
                  alpha = alpha, sim_size = sim_size)
 # best_rmst <- find_m_t_RMST(rmst_data = rmst_data, search_times = 1000, 
 #                  alpha = alpha, sim_size = sim_size)
