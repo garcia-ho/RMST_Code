@@ -10,8 +10,8 @@
 # Parameter 'logrank': If logrank = TRUE, search for the optimal n for log_rank test
 #_________________________________________________________________
 
-get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method = NULL, lambda_H0, 
-                        lambda_H1, H1_type, HR1, HR2, change_time, alpha, power, logrank = NULL) 
+get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambda_H0, 
+                        lambda_H1, H1_type, HR1, HR2, change_time, alpha, power) 
 {
     N <- 2 * n #overall sample size of two groups
     r <- N / acc_time
@@ -36,7 +36,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method = NULL
     for (i in 1 : length(interim_list))
     {  
         interim <- interim_list[i]  # interim is the length of interim period
-        if (is.null(logrank))
+        if (method != 'logrank')
         {
             rmst_h0_int <- RMST_sim_cal(n = n,data_E = data_E_H0[ , c(2,3,1), i], 
                                 data_C = data_C[ , c(2,3,1), i],tau = interim, sim_size = sim_size)
@@ -58,19 +58,19 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method = NULL
                     alpha = alpha, power = power)
         }
 
-        else if (logrank == TRUE)   # search the min(E(N)) using log rank test
+        else if (method == 'logrank')   # search the min(E(N)) using log rank test
         {
             z_stats_h0_int <- log_rank_sim(data_C = data_C[ , c(2,3,1), i], data_E = data_E_H0[ , c(2,3,1), i], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
             z_stats_h1_int <- log_rank_sim(data_C = data_C[ , c(2,3,1), i], data_E = data_E_H1[ , c(2,3,1), i], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
             z_stats_h0_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1), i], data_E = data_E_H0[ , c(4,5,1), i], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
-            z_stats_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1), i],  data_E = data_E_H1[ , c(4,5,1), i], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
+            z_stats_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1), i], data_E = data_E_H1[ , c(4,5,1), i], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
             logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin)   
-            best_our <- find_m_logrank(logrank_data = logrank_data, search_times = 500, sim_size = sim_size,
-                                        alpha = alpha, power = power, int_n = interim * r, fin_n = N)
+            best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size,
+                                    alpha = alpha, power = power, int_n = interim * r, fin_n = N)
         }
 
         best_our$interim_n <- interim * r

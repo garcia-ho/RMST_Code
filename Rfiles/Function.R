@@ -357,7 +357,7 @@ find_m_t_RMST <- function(rmst_h0_fin, rmst_h1_fin, search_times, alpha, sim_siz
     t_up <-  quantile(rmst_h1_fin[2,], 0.8)
   }
   
-  result_m1 <- foreach(m = seq(from = m_low, to = m_up, by = (m_up - m_low) / search_times), 
+  crit_val_res <- foreach(m = seq(from = m_low, to = m_up, by = (m_up - m_low) / search_times), 
                       .combine = 'cbind') %dopar% { 
       if (method == 'Simple'){
         t <- 0
@@ -389,11 +389,11 @@ find_m_t_RMST <- function(rmst_h0_fin, rmst_h1_fin, search_times, alpha, sim_siz
       }
     }
 
-  if (is.null(result_m1)) {   # Return NULL when something goes wrong
+  if (is.null(crit_val_res)) {   # Return NULL when something goes wrong
       return(NULL)
     }
 
-  powerful_m1 <- result_m1[, which(result_m1[4, ] == max(result_m1[4, ]))]
+  powerful_m1 <- crit_val_res[, which(crit_val_res[4, ] == max(crit_val_res[4, ]))]
 
   if(is.null(dim(powerful_m1))){
       opt_pet0_m1 <- powerful_m1
@@ -422,7 +422,7 @@ find_m_t_RMST <- function(rmst_h0_fin, rmst_h1_fin, search_times, alpha, sim_siz
 # ________power is given, will search for the critical value with min(E(N))__________
 # When power is given, int_n and fin_n are required for E(N) calculation
 
-find_m_logrank <- function(logrank_data, search_times, int_n = NULL, fin_n = NULL,  
+find_m_logrank <- function(logrank_data, int_n = NULL, fin_n = NULL,  
                           alpha, sim_size, power = NULL) 
 {
   z_stats_h0_int <-  logrank_data[1, ]
@@ -430,81 +430,80 @@ find_m_logrank <- function(logrank_data, search_times, int_n = NULL, fin_n = NUL
   z_stats_h0_fin <-  logrank_data[3, ]
   z_stats_h1_fin <-  logrank_data[4, ]
 
-  c_low <- quantile(logrank_data, 0.1)
-  c_up <- quantile(logrank_data, 0.9) 
+  bootstrap_int <- c()
+  bootstrap_fin <- c()
+  num_bootstrap <- 400
+  for (i in 1:num_bootstrap) 
+  {   # Resample with replacement from H0 and H1
+    bootstrap_int_i <- z_stats_h1_int[sample(1:sim_size, sim_size, replace = TRUE)]
+    bootstrap_fin_i <- z_stats_h1_fin[sample(1:sim_size, sim_size, replace = TRUE)]
+    bootstrap_int <- rbind(bootstrap_int, bootstrap_int_i)
+    bootstrap_fin <- rbind(bootstrap_fin, bootstrap_fin_i)
+  }
 
-  result_m1 <- foreach(m1 = seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times), 
-                      .combine = 'cbind') %dopar% { 
-      best_m2 <- c()
-      opt_power <- 0
-      for(m2 in seq(from = c_low, to = c_up, by = (c_up - c_low) / search_times))
-        {
+  crit_val_res <- foreach(gamma = seq(0.1, 1, 0.02), .combine = 'cbind') %dopar%
+    { 
+        prob_int <- exp(-gamma * (int_n / fin_n))
+        prob_fin <- exp(-gamma * (fin_n / fin_n))
+        c_value <- c()
+        for (i in 1:num_bootstrap) 
+        {   # Resample with replacement from H0 and H1
+            m1_boot <- quantile(bootstrap_int[i, ], 1 - prob_int)
+            m2_boot <- quantile(bootstrap_fin[i, ], 1 - prob_fin)
+            c_value <- cbind(c_value, c(m1_boot, m2_boot))
+        }
+        c_value <- rowMeans(c_value)
+        m1 <- c_value[1]
+        m2 <- c_value[2]
         proc_h0 <- sum((z_stats_h0_int > m1) & (z_stats_h0_fin > m2))
         proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
-
-        if (is.null(power))
-          {
-            if (proc_h0/sim_size < alpha & proc_h1/sim_size >= opt_power) 
-            {
-              opt_power <- proc_h1/sim_size
-              PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
-              PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-              best_m2 <- c(m1, m2, PET0, PET1, proc_h0/sim_size, opt_power)
-            }
-          }
-
-        else
-          {
-            if (proc_h0/sim_size > 0 & proc_h0/sim_size < alpha & proc_h1/sim_size >= power) 
-              {
-                PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
-                PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-                best_m2 <- cbind(best_m2, c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
-              }
-          }
+        PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
+        PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
+        if (proc_h0/sim_size < alpha ) {
+            return(c(m1, m2, gamma, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
         }
-      return(best_m2)
     }
-    
-  if(is.null(power))
+
+  if(is.null(power)) # Power is not specified, return the most powerfule result
     {
-      if (is.null(result_m1)) 
-        {   # Return NULL when something goes wrong
-          return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0))
-        }
-      powerful_m1 <- result_m1[, which(result_m1[6, ] == max(result_m1[6, ]))]
+      powerful_m1 <- crit_val_res[, which(crit_val_res[7, ] == max(crit_val_res[7, ]))]
+
       if(is.null(dim(powerful_m1))){
         opt_pet0_m1 <- powerful_m1
       }
-      else{  # find the largest PET0 if multiply solution exist
-        opt_pet0_m1 <- powerful_m1[, which(powerful_m1[3, ] == max(powerful_m1[3, ]))]
+      else {  # find the smallest m1 if multiply solution exist
+        opt_pet0_m1 <- powerful_m1[, which(powerful_m1[1, ] == min(powerful_m1[1, ]))]
       }
       opt_pet0_m1 <- data.frame(t(opt_pet0_m1))
-      colnames(opt_pet0_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+      colnames(opt_pet0_m1) <- c('m1', 'm2', 'gamma', 'PET0', 'PET1', 'alpha', 'power')
       return(opt_pet0_m1)
     }
 
   else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
   {
-    if (is.null(result_m1)) 
-      {   # Return NULL when something goes wrong
-        return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
-              EN0 = NA, EN1 = NA, EN = NA))
+    crit_val_res <- rbind (crit_val_res, crit_val_res[4, ] * int_n + 
+                                (1 - crit_val_res[4, ]) * fin_n)
+    crit_val_res <- rbind (crit_val_res, crit_val_res[5, ] * int_n + 
+                                (1 - crit_val_res[5, ]) * fin_n)
+    crit_val_res <- rbind (crit_val_res, colMeans(rbind(crit_val_res[8, ], crit_val_res[9, ])))
+    # Follow the power constraint
+    best_res <- crit_val_res[, which(crit_val_res[7, ] >= power)]
+
+    if (is.null(best_res)) {   
+      return(data.frame(m1 = 0, m2 = 0, gamma = 0, PET0 = 0, PET1 = 0, 
+                          alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
       }
-    result_m1 <- rbind (result_m1, result_m1[3, ]  * int_n + 
-                                (1 - result_m1[3, ]) * fin_n)
-    result_m1 <- rbind (result_m1, result_m1[4, ] * int_n + 
-                                (1 - result_m1[4, ]) * fin_n)
-    result_m1 <- rbind (result_m1, colMeans(rbind(result_m1[7, ], result_m1[8, ])))
-    best_res <- result_m1[, which(result_m1[9, ] == min(result_m1[9, ]))]
+    if (!is.null(dim(best_res))) { # not unique solution
+      best_res <- best_res[, which(best_res[10, ] == min(best_res[10, ]))]
+    }
     best_res <- data.frame(t(best_res))
-    colnames(best_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power', 'EN0', 'EN1', 'EN')
+    colnames(best_res) <- c('m1', 'm2', 'gamma', 'PET0', 'PET1', 
+                            'alpha', 'power', 'EN0', 'EN1', 'EN')
     if (dim(best_res)[1] > 1) {     # multiple solution, return the first one
        best_res <- best_res[1, ]
     }
     return(best_res)
   }
-
 }
 
 
