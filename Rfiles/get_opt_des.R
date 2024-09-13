@@ -60,17 +60,26 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
 
         else if (method == 'logrank')   # search the min(E(N)) using log rank test
         {
-            z_stats_h0_int <- log_rank_sim(data_C = data_C[ , c(2,3,1), i], data_E = data_E_H0[ , c(2,3,1), i], 
-                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
-            z_stats_h1_int <- log_rank_sim(data_C = data_C[ , c(2,3,1), i], data_E = data_E_H1[ , c(2,3,1), i], 
-                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
-            z_stats_h0_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1), i], data_E = data_E_H0[ , c(4,5,1), i], 
-                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
-            z_stats_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1), i], data_E = data_E_H1[ , c(4,5,1), i], 
-                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')$z_stats
-            logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin)   
-            best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size,
-                                    alpha = alpha, power = power, int_n = interim * r, fin_n = N)
+            lr_h0_int <- log_rank_sim(data_C = data_C[ , c(2,3,1), i], data_E = data_E_H0[ , c(2,3,1), i], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+            lr_h1_int <- log_rank_sim(data_C = data_C[ , c(2,3,1), i], data_E = data_E_H1[ , c(2,3,1), i], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+            lr_h0_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1), i], data_E = data_E_H0[ , c(4,5,1), i], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+            lr_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1), i], data_E = data_E_H1[ , c(4,5,1), i], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+            
+            # Get W/sigma
+            z_stats_h1_int <- lr_h1_int$z_stats
+            z_stats_h1_fin <- lr_h1_fin$z_stats
+            z_stats_h0_int <- lr_h0_int$z_stats
+            z_stats_h0_fin <- lr_h0_fin$z_stats
+            logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin) 
+
+            # corr(W1, W | H0)
+            corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))         
+            best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size, corr_h0 = corr_h0,
+                            search_times = 300, alpha = alpha, power = power, int_n = interim * r, fin_n = N)
         }
 
         best_our$interim_n <- interim * r

@@ -36,22 +36,29 @@ rmst_data <- rbind(rmst_h0_int, rmst_h1_int, rmst_h0_fin, rmst_h1_fin)
 mu_cov_h0 <- mu_cov_mc(rmst_int = rmst_h0_int, rmst_fin = rmst_h0_fin, sim_size = sim_size)
 mu_cov_h1 <- mu_cov_mc(rmst_int = rmst_h1_int, rmst_fin = rmst_h1_fin, sim_size = sim_size)
 
-z_stats_h0_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], data_E = data_E_H0[ , c(2,3,1)], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
-z_stats_h1_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], data_E = data_E_H1[ , c(2,3,1)], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
-z_stats_h0_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)], data_E = data_E_H0[ , c(4,5,1)], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
-z_stats_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)],  data_E = data_E_H1[ , c(4,5,1)], 
-                        sim_size =  sim_size, n = n, alpha = 0.05, sided = 'greater')$z_stats
-logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin)
+lr_h0_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], data_E = data_E_H0[ , c(2,3,1)], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+lr_h1_int <- log_rank_sim(data_C = data_C[ , c(2,3,1)], data_E = data_E_H1[ , c(2,3,1)], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+lr_h0_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)], data_E = data_E_H0[ , c(4,5,1)], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+lr_h1_fin <- log_rank_sim(data_C = data_C[ , c(4,5,1)], data_E = data_E_H1[ , c(4,5,1)], 
+                        sim_size =  sim_size, n = n, alpha = alpha, sided = 'greater')
+            
+# Get W/sigma
+z_stats_h1_int <- lr_h1_int$z_stats
+z_stats_h1_fin <- lr_h1_fin$z_stats
+z_stats_h0_int <- lr_h0_int$z_stats
+z_stats_h0_fin <- lr_h0_fin$z_stats
+logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin) 
+# corr(W1, W | H0)
+corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))         
+
 
 best_our <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                 int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, method = 'Complex')
-best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 500,
+best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 300, corr_h0 = corr_h0,
                  alpha = alpha, sim_size = sim_size)
-# best_rmst <- find_m_t_RMST(rmst_data = rmst_data, search_times = 1000, 
-#                  alpha = alpha, sim_size = sim_size)
 best_rmst <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                 int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, method = 'Simple')
 
