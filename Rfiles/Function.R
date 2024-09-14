@@ -495,7 +495,7 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
 
   else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
   {
-    if (dim(crit_val_res)[2] == 0) {   
+    if (is.null(crit_val_res) | dim(crit_val_res)[2] == 0) {   
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
                           alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
       }
