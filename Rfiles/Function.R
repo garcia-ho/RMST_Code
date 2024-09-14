@@ -457,8 +457,8 @@ norm_2d <- function(m2, m1, mean, sigma, alpha)
     return (prob - alpha)
   }
 
-m1_low <- quantile(z_stats_h0_int, 0.35)  # Under H0, Z ~ N(0,1)
-m1_up <- quantile(z_stats_h0_int, 0.65) 
+m1_low <- quantile(z_stats_h0_int, 0.3)  # Under H0, Z ~ N(0,1)
+m1_up <- quantile(z_stats_h0_int, 0.7) 
 crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
                     .combine = 'cbind') %dopar% 
   {
@@ -468,11 +468,18 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
     proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
     PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
     PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-    return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
+    if(abs(proc_h0/sim_size - alpha) < 0.1 * alpha){
+      return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
+    }
+
   }
     
   if(is.null(power)) # Power is not specified, return the most powerfule result
     {
+      if(is.null(crit_val_res)){
+        return(return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
+                          alpha = 0, power = 0)))
+      }
       powerful_m1 <- crit_val_res[, which(crit_val_res[6, ] == max(crit_val_res[6, ]))]
 
       if(is.null(dim(powerful_m1))){ #unique solution
@@ -488,6 +495,10 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
 
   else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
   {
+    if (dim(crit_val_res)[2] == 0) {   
+      return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
+                          alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
+      }
     crit_val_res <- rbind (crit_val_res, crit_val_res[3, ] * int_n + 
                                 (1 - crit_val_res[3, ]) * fin_n)
     crit_val_res <- rbind (crit_val_res, crit_val_res[4, ] * int_n + 
@@ -496,11 +507,11 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
     # Follow the power constraint
     best_res <- crit_val_res[, which(crit_val_res[6, ] >= power)]
 
-    if (is.null(best_res)) {   
+    if (dim(best_res)[2] == 0) {   
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
                           alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
       }
-    if (!is.null(dim(best_res))) { # not unique solution min E(N)
+    if (dim(best_res)[1] > 1) { # not unique solution min E(N)
       best_res <- best_res[, which(best_res[9, ] == min(best_res[9, ]))]
     }
     best_res <- data.frame(t(best_res))
@@ -551,11 +562,11 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
       #Grid search
-      crit_val_res <- foreach(lambda = seq(0.4, 0.99, 0.01), .combine = 'cbind') %dopar%
+      crit_val_res <- foreach(lambda = seq(0.1, 0.99, 0.02), .combine = 'cbind') %dopar%
       {   
         best_gamma <- c()
         best_power <- 0
-        for (gamma in seq(0, 1, by = 0.01))
+        for (gamma in seq(0, 1, by = 0.02))
           {
             p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
             p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)

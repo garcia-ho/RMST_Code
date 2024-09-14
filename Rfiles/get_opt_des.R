@@ -15,7 +15,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
 {
     N <- 2 * n #overall sample size of two groups
     r <- N / acc_time
-    int_factor <- seq(0.5, 0.7, by = int_step / N)  # Each time interim sample size increase by 6
+    int_factor <- seq(0.3, 0.6, by = int_step / N)  # Each time interim sample size increase by 6
     interim_list <- int_factor * acc_time
 
     data_C <- expo_gen_2stages(N = n * sim_size, acc_time = acc_time, lambda = lambda_H0, dist = 'exp', 
@@ -79,13 +79,28 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
             # corr(W1, W | H0)
             corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))         
             best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size, corr_h0 = corr_h0,
-                            search_times = 300, alpha = alpha, power = power, int_n = interim * r, fin_n = N)
+                            search_times = 100, alpha = alpha, power = power, int_n = interim * r, fin_n = N)
         }
 
-        best_our$interim_n <- interim * r
+        best_our$interim_n <- ceiling(interim * r)
         all_result <- rbind(all_result, best_our)
     }
 
-    return(all_result[which(all_result$EN == min(all_result$EN, na.rm = TRUE)), ])
-    # return the result with minimal EN
+    all_result <- na.omit(all_result)    #valid result 
+    if (dim(all_result)[1] == 0) {
+        if(method == 'logrank'){
+            return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, 
+                        power = 0, EN0 = NA, EN1 = NA, EN = NA, interim_n = NA))
+        }
+        else{
+             return(data.frame(m1 = 0, t1 = 0, m2 = 0, t2 = 0, lambda = 0,
+                        gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, 
+                        power = 0, EN0 = NA, EN1 = NA, EN = NA, interim_n = NA))
+        }
+    }
+    else{
+        return(all_result[which(all_result$EN == min(all_result$EN, na.rm = TRUE)), ])
+        # return the result with minimal EN
+    }
+   
 }
