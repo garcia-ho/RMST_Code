@@ -507,11 +507,10 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
     # Follow the power constraint
     best_res <- crit_val_res[, which(crit_val_res[6, ] >= power)]
 
-    if (is.null(best_res) || dim(best_res)[1] == 0) {   
+    if (is.null(best_res) || dim(best_res)[2] == 0) {   
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
                           alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
-      }
-    if (dim(best_res)[1] > 1) { # not unique solution min E(N)
+      } else if (dim(best_res)[2] > 1) { # not unique solution min E(N)
       best_res <- best_res[, which(best_res[9, ] == min(best_res[9, ]))]
     }
     best_res <- data.frame(t(best_res))
