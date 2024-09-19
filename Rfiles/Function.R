@@ -477,8 +477,8 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
   if(is.null(power)) # Power is not specified, return the most powerfule result
     {
       if(is.null(crit_val_res)){
-        return(return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
-                          alpha = 0, power = 0)))
+        return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
+                          alpha = 0, power = 0))
       }
       powerful_m1 <- crit_val_res[, which(crit_val_res[6, ] == max(crit_val_res[6, ]))]
 
@@ -565,7 +565,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       {   
         best_gamma <- c()
         best_power <- 0
-        for (gamma in seq(0, 1, by = 0.02))
+        for (gamma in seq(0, 4, by = 0.04))
           {
             p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
             p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)
