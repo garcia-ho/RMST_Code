@@ -685,20 +685,20 @@ compare_line_plot <- function(data, var_name)
   {
     options(repr.plot.width = 20, repr.plot.height = 8)
 
-    color_palette <- c("Our_power" = "darkred", "Our_alpha" = "darkred", 
+    color_palette <- c("Sculpted_power" = "darkred", "Sculpted_alpha" = "darkred", 
                       "LR_power" = "lightgreen", "LR_alpha" = "lightgreen",
                       "Rmst_power" = "blue", "Rmst_alpha" = "blue",
-                      "Our_PET0" = "darkred", "Our_PET1" = "darkred", 
+                      "Sculpted_PET0" = "darkred", "Sculpted_PET1" = "darkred", 
                       "LR_PET0" = "lightgreen", "LR_PET1" = "lightgreen",
                       "Rmst_PET0" = "blue", "Rmst_PET1" = "blue")
 
     a_power_delta <- data.frame(data[, c(1,2,3,4,5,6,7)])
-    colnames(a_power_delta) <- c(var_name,'LR_alpha','Rmst_alpha','Our_alpha',
-                          'LR_power', 'Rmst_power','Our_power')
+    colnames(a_power_delta) <- c(var_name,'LR_alpha','Rmst_alpha','Sculpted_alpha',
+                          'LR_power', 'Rmst_power','Sculpted_power')
     a_power_long <- a_power_delta %>%
         pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")%>%
         mutate(linetype_group = ifelse(variable %in% 
-            c("LR_alpha", "Rmst_alpha", "Our_alpha"), "Alpha", "Power"))
+            c("LR_alpha", "Rmst_alpha", "Sculpted_alpha"), "Alpha", "Power"))
     a_power_long <- a_power_long %>% filter(value != 0)   # 0 means could not find critical values
 
     plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, 
@@ -722,12 +722,12 @@ compare_line_plot <- function(data, var_name)
 
 #_________next plot_________
     pet_delta <- data.frame(data[, c(1,8,9,10,11,12,13)])
-    colnames(pet_delta) <- c(var_name,'LR_PET0', 'Rmst_PET0', 'Our_PET0',
-                      'LR_PET1', 'Rmst_PET1', 'Our_PET1')
+    colnames(pet_delta) <- c(var_name,'LR_PET0', 'Rmst_PET0', 'Sculpted_PET0',
+                      'LR_PET1', 'Rmst_PET1', 'Sculpted_PET1')
     pet_long <- pet_delta %>%
         pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")%>%
         mutate(linetype_group = ifelse(variable %in% 
-              c("LR_PET0", "Rmst_PET0", "Our_PET0"), "PET0", "PET1"))
+              c("LR_PET0", "Rmst_PET0", "Sculpted_PET0"), "PET0", "PET1"))
     pet_long <- pet_long %>% filter(value != 0) 
 
     plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, 
