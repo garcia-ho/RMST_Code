@@ -457,8 +457,8 @@ norm_2d <- function(m2, m1, mean, sigma, alpha)
     return (prob - alpha)
   }
 
-m1_low <- quantile(z_stats_h0_int, 0.2)  # Under H0, Z ~ N(0,1)
-m1_up <- quantile(z_stats_h0_int, 0.8) 
+m1_low <- quantile(z_stats_h0_int, 0.3)  # Under H0, Z ~ N(0,1)
+m1_up <- quantile(z_stats_h0_int, 0.7) 
 crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
                     .combine = 'cbind') %dopar% 
   {
@@ -565,7 +565,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       {   
         best_gamma <- c()
         best_power <- 0
-        for (gamma in seq(0, 4, by = 0.04))
+        for (gamma in seq(0, 2, by = 0.02))
           {
             p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
             p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)
