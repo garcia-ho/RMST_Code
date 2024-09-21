@@ -683,7 +683,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
 
 compare_line_plot <- function(data, var_name) 
   {
-    options(repr.plot.width = 20, repr.plot.height = 8)
+    options(repr.plot.width = 10, repr.plot.height = 8)
 
     color_palette <- c("Sculpted_power" = "darkred", "Sculpted_alpha" = "darkred", 
                       "LR_power" = "lightgreen", "LR_alpha" = "lightgreen",
@@ -705,7 +705,7 @@ compare_line_plot <- function(data, var_name)
         color = variable, linetype = linetype_group)) +
     geom_point(size = 3) +
     geom_line(linewidth = 1) +
-    #geom_vline(xintercept = 0.67, color = "red", linetype = "dashed", size = 1) +
+    #geom_vline(xintercept = 0.7, color = "red", linetype = "dashed", size = 1) +
     scale_linetype_manual(values = c("Alpha" = "solid", "Power" = "dotted")) +
     labs( linetype = "Line Type", color = "Variable",
           title = "Line Plot with Different Line Types") +
