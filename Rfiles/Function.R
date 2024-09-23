@@ -682,8 +682,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
 
 
 compare_line_plot <- function(data, var_name) 
-  {
-    options(repr.plot.width = 10, repr.plot.height = 8)
+  { 
+    options(repr.plot.width = 20, repr.plot.height = 8)
 
     color_palette <- c("Sculpted_power" = "darkred", "Sculpted_alpha" = "darkred", 
                       "LR_power" = "lightgreen", "LR_alpha" = "lightgreen",
