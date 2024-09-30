@@ -57,7 +57,7 @@ corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))
 
 best_our <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                 int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, method = 'Complex')
-best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 150, corr_h0 = corr_h0,
+best_lr <- find_m_logrank(logrank_data = logrank_data, search_times = 200, corr_h0 = corr_h0,
                  alpha = alpha, sim_size = sim_size)
 best_rmst <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                 int_n = interim * r, fin_n = 2 * n, alpha = alpha, sim_size = sim_size, method = 'Simple')

@@ -457,8 +457,8 @@ norm_2d <- function(m2, m1, mean, sigma, alpha)
     return (prob - alpha)
   }
 
-m1_low <- quantile(z_stats_h0_int, 0.3)  # Under H0, Z ~ N(0,1)
-m1_up <- quantile(z_stats_h0_int, 0.7) 
+m1_low <- quantile(z_stats_h0_int, 0.25)  # Under H0, Z ~ N(0,1)
+m1_up <- quantile(z_stats_h0_int, 0.75) 
 crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
                     .combine = 'cbind') %dopar% 
   {
