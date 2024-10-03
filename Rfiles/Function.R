@@ -561,7 +561,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
       #Grid search
-      crit_val_res <- foreach(lambda = seq(0.1, 0.99, 0.02), .combine = 'cbind') %dopar%
+      crit_val_res <- foreach(lambda = seq(0.5, 0.99, 0.01), .combine = 'cbind') %dopar%
       {   
         best_gamma <- c()
         best_power <- 0
