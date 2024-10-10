@@ -26,8 +26,7 @@ $H_1:\ \lambda_E(t) < \lambda_C(t)$
     - $\frac{W_1}{\sigma_1}>c_1$ & $\frac{W}{\sigma}>c$, where $\frac{W}{\sigma}>c$ is the normal log rank test statistics    
 According to Jung(2017), two stages log-ranktest can reach a similar power as corresponding single stage test if the interim period, $c_1,\ c$ are well selected. 
 
-$R_E, R_C$ are the RMST value of experiment group and the control group respectively.   
-$\tau$ is the cutoff time point of interim period(1) and overall trial(2). $D_i = \R_{Ei} - R_{Ci}$.
+$R_E,\ R_C$ are the RMST value of experiment group and the control group of interim period(1) and overall trial(2)respectively. $D_i = R_{Ei} - R_{Ci}$.
 
 - 2. Simple RMST Difference  
     - $D_1 > m_1 \cap\ D_2 > m_2$
@@ -38,7 +37,7 @@ $\tau$ is the cutoff time point of interim period(1) and overall trial(2). $D_i 
 ****
 ## Asymptotic Normality of RMST:
 ```math
-[\hat{D}_1(\tau_1),\ \hat{R}_{E1}(\tau_1),\ \hat{D}_2(\tau_2),\ \hat{R}_{E2}] \sim \mathcal{N}\ (\ \hat{\mu},\ \hat{\Sigma}\ )
+[D_1,\ R_{E1},\ D_2,\ R_{E2}] \sim \mathcal{N}\ (\ \hat{\mu},\ \hat{\Sigma}\ )
 ```
 
 ### Estimated by Monte Carlo Simulation
@@ -56,14 +55,14 @@ Similar to Lu(2021):
 \frac{1}{B}\sum\limits_{i = 1}^{B} 
  \left[
  \begin{matrix}
-   \hat{D}_{1i} - \Bar{D}_1\\
-   \hat{R}_{E1i} - \Bar{R}_{E1}
+   \hat{D}_{1i} - \bar{D}_1\\
+   \hat{R}_{E1i} - \bar{R}_{E1}
   \end{matrix}
   \right] ^{\bigotimes2} 
  ```  
   
 ```math
-  \Bar{D}_1 &= \frac{1}{B}\sum_{i=1}^B \hat{D}_{1i}
+  \bar{D}_1 = \frac{1}{B}\sum_{i=1}^B \hat{D}_{1i}
 ```  
 The theoretical RMST value did not consider accrual and censoring distribution.
 
