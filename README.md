@@ -89,31 +89,33 @@ Reference: Zhou(2017) BOP2 Bayesian design:
 In order to solve the critical values ($m_1,\ t_1,\ m_2,\ t_2$), a function that can control the normal probability is required. The following $\mathcal{f}(n)$ is what we proposed. 
 
 ```math
-\large \mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}
+\large \mathcal{f}(\Tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\Tilde{N}}{N}}
 ```
 
-$n$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.   
+$\Tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms. $\hat{D}_i = \hat{R}_{Ei} - \hat{R}_{Ci}$
 Then we set the following constraints:   
 
 ```math
 \begin{aligned}
-\large P(E_1 - C_1 > m_1) &= \mathcal{f}(n)  \\
-\large P(E_1 - C_1 > m_1\ \&\ E_1 > t_1) &= \lambda · \mathcal{f}(n) \\
-\large P(E_2 - C_2 > m_2) &=  \mathcal{f}(N) \\
-\large P(E_2 - C_2 > m_2\ \&\ E_2 > t_2) &= \lambda · \mathcal{f}(N) \\
-0<\lambda<1,\ \gamma>0  
+P(\hat{D}_1(\tau_1)> m_1) &= f(\Tilde{N}) \\
+P(\hat{D}_1(\tau_1) > m_1 \cap \hat{R}_{E1}(\tau_1)> q_1) &= \lambda \cdot f(\Tilde{N}) \\
+P(\hat{D}_2(\tau_2) > m_2) &= f(N) \\
+P(\hat{D}_2(\tau_2) > m_2 \cap \hat{R}_{E2}(\tau_2)> q_2) &= \lambda \cdot f(N) \\
+\lambda \in (0,1).\\ 
 \end{aligned}
 ```
 
-$\mathcal{f}(n)$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
+$\mathcal{f}(\Tilde{N})$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
 #### It leads to a small early stop probability with an insufficient interim sample size.  
 Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ determines a set of ($m_1,\ t_1,\ m_2,\ t_2$) by normal calculation. Record critical values sets that yield the desirable overall type I error $\alpha$:  
 
 ```math  
-\large P(E_1-C_1>m_1\ \&\  E_1>t_1\ \&\  E_2 - C_2>m_2\ \&\  E_2>t_2\ |H_0) < \alpha
+\large \alpha = P(\hat{D}_1(\tau_1) > m_1\ \cap\ \hat{R}_{E1}(\tau_1)> q_1\ \cap\ \hat{D}_2(\tau_2) > m_2\ \cap\ \hat{R}_{E2}(\tau_2)> q_2\ |\ H_0),\\
 ```
 
-#### Find the most powerful one under $H_1$ among these ($m_1,\ t_1,\ m_2,\ t_2$)  
+2 grid searching strategies can be conducted:
+#### 1. Two-stage Most Powerful Design with Fixed Sample Size
+#### 2. Two-stage Optimal Design Minimizing $\overline{EN}$ 
 
 
 ****
@@ -139,13 +141,32 @@ The comparison of three methods under different setting is shown below:
 The graph shows us that our method have higher power while preserving the type I error under different early difference settings. Higher PET0 and relatively acceptable sacrifice of PET1. 
 
 
+****
+### Visualization of Sculpted Rejection Region 
+
+![The sculpted critical region](figures/rejection_plot.jpg)  
+
+The data points in overall rejection region of H0 in 10000 simulated trials. Each blue or orange dot in subplot A representing a pair of $(R_{E1}, R_{C1})$, which is one simulated trial in interim stage, has a corresponding dot with the same color in subplot B indicating the final stage of the same trial. A pair of corresponding dots that both fall in shaded region will be dyed green. Lines are most powerful decision boundaries of Simple and Sculpted RMST in two stages.\\  
+185 blue dots and 99 orange dots move out of the shaded region from interim to final, which is the main source of difference in overall type one error. More precisely, there are more simulated trials with small experimental RMST in final stage $R_{E2}$ fail to reject $H_0$ due to the $R_{E2} > 0.8983$ condition in Sculpted RMST (blue dots to the left of shaded area) than that with low final RMST difference $D_2$ (orange dots below shaded area). These additional dots moved outside of the sculpted region compared to Simple RMST represent the saving type I error.\\  
+Move on to the discussion of parameters $(\gamma, \lambda)$ in grid search procedure. $\gamma$ influences the relative position of the orange lines in subplot A compared to those in subplot B. Meanwhile, $\lambda$ governs the relative position of the vertical and horizontal orange lines within each subplot. 
+
+
+
+
+
 
 ****
 ### Robustness
-The following graph shows the robustness of three methods when the real hazard ratio drift away from the assumed HR = 0.667. We conduct the same critical value calculated by $H1:\ \lambda_E/\lambda_C = 0.67$ on other data generated under different hazard ratio. The change of Power and PET1 is shown below(The PET0 and type I error should be consistant across different HR).  The robustness of our method is competitive compared with log-rank test.
+Within the hypothesis of a trial:  \\
+```math
+\begin{aligned}
+H_0&:\ \lambda_E = \lambda_C = \lambda_0,\\
+H_1&:\ \lambda_C = \lambda_0,\ \lambda_E = \lambda_1, \nonumber
+\end{aligned}
+```
+The following graph shows the robustness of three methods when the real hazard drift away from the assumed value. The critical values calculated under this setting of orange dotted lines are saved then plugged into the simulated data under different $\lambda_0$(subplot A) or $\lambda_1$(subplot B). 10000 pairs of experimental and control groups survival data are generated under each $\lambda_0$ or $\lambda_1$ while preserving the hazard of the other group. The change of Power and PET1 is shown below(The PET0 and type I error should be consistant across different HR).  The actual $\alpha$ and power of the Sculpted RMST will deviate more from the expected stated level compared to the other two methods if the assumed hazard in control group is inaccurate. However if only $\lambda_1$ drifts from the stated number, our method can perform as robustly as the Simple RMST and log-rank test.
 
-![Robustness under HR](figures/Robustness.pdf)  
-
+![Robustness under HR](figures/Robustness.jpg)  
 
 
 
