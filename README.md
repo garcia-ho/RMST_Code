@@ -105,7 +105,7 @@ P(\hat{D}_2(\tau_2) > m_2 \cap \hat{R}_{E2}(\tau_2)> q_2) &= \lambda \cdot f(N) 
 \end{aligned}
 ```
 
-$\mathcal{f}(\Tilde{N})$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
+$\mathcal{f}(\tilde{N})$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
 #### It leads to a small early stop probability with an insufficient interim sample size.  
 Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ determines a set of ($m_1,\ t_1,\ m_2,\ t_2$) by normal calculation. Record critical values sets that yield the desirable overall type I error $\alpha$:  
 
@@ -121,7 +121,7 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 ****
 ## Result
 ### Under Proportional Hazard Scenario  
-We used $\frac{\lambda{E}}{\lambda{C}}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate r = 90 (patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
+We used $\frac{\lambda{E}}{\lambda{C}}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate $r = 90$(patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
 The performances of three methods are compared with different Hazard Ratio(under H1) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
 
 <p align="center"> 
@@ -146,8 +146,8 @@ The graph shows us that our method have higher power while preserving the type I
 
 ![The sculpted critical region](figures/rejection_plot.jpg)  
 
-The data points in overall rejection region of H0 in 10000 simulated trials. Each blue or orange dot in subplot A representing a pair of $(R_{E1}, R_{C1})$, which is one simulated trial in interim stage, has a corresponding dot with the same color in subplot B indicating the final stage of the same trial. A pair of corresponding dots that both fall in shaded region will be dyed green. Lines are most powerful decision boundaries of Simple and Sculpted RMST in two stages.\\  
-185 blue dots and 99 orange dots move out of the shaded region from interim to final, which is the main source of difference in overall type one error. More precisely, there are more simulated trials with small experimental RMST in final stage $R_{E2}$ fail to reject $H_0$ due to the $R_{E2} > 0.8983$ condition in Sculpted RMST (blue dots to the left of shaded area) than that with low final RMST difference $D_2$ (orange dots below shaded area). These additional dots moved outside of the sculpted region compared to Simple RMST represent the saving type I error.\\  
+The data points in overall rejection region of H0 in 10000 simulated trials. Each blue or orange dot in subplot A representing a pair of $(R_{E1}, R_{C1})$, which is one simulated trial in interim stage, has a corresponding dot with the same color in subplot B indicating the final stage of the same trial. A pair of corresponding dots that both fall in shaded region will be dyed green. Lines are most powerful decision boundaries of Simple and Sculpted RMST in two stages.  
+185 blue dots and 99 orange dots move out of the shaded region from interim to final, which is the main source of difference in overall type one error. More precisely, there are more simulated trials with small experimental RMST in final stage $R_{E2}$ fail to reject $H_0$ due to the $R_{E2} > 0.8983$ condition in Sculpted RMST (blue dots to the left of shaded area) than that with low final RMST difference $D_2$ (orange dots below shaded area). These additional dots moved outside of the sculpted region compared to Simple RMST represent the saving type I error.   
 Move on to the discussion of parameters $(\gamma, \lambda)$ in grid search procedure. $\gamma$ influences the relative position of the orange lines in subplot A compared to those in subplot B. Meanwhile, $\lambda$ governs the relative position of the vertical and horizontal orange lines within each subplot. 
 
 
@@ -157,7 +157,7 @@ Move on to the discussion of parameters $(\gamma, \lambda)$ in grid search proce
 
 ****
 ### Robustness
-Within the hypothesis of a trial:  \\
+Within the hypothesis of a trial: 
 ```math
 \begin{aligned}
 H_0&:\ \lambda_E = \lambda_C = \lambda_0,\\
