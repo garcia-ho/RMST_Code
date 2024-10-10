@@ -26,31 +26,19 @@ $H_1:\ \lambda_E(t) < \lambda_C(t)$
     - $\frac{W_1}{\sigma_1}>c_1$ & $\frac{W}{\sigma}>c$, where $\frac{W}{\sigma}>c$ is the normal log rank test statistics    
 According to Jung(2017), two stages log-ranktest can reach a similar power as corresponding single stage test if the interim period, $c_1,\ c$ are well selected. 
 
-$E, C$ are the RMST value of experiment group and the control group respectively.   
-$\tau$ is the cutoff time point of interim period(1) and overall trial(2)  
+$\hat{R}_E, \hat{R}_C$ are the RMST value of experiment group and the control group respectively.   
+$\tau$ is the cutoff time point of interim period(1) and overall trial(2). $\hat{D}_i = \hat{R}_{E} - \hat{R}_{C}$.
 
 - 2. Simple RMST Difference  
-    - $E(\tau_1) - C(\tau_1) > m_1$ & $E(\tau_2)-C(\tau_2)>m_2$
+    - $\hat{D}_1(\tau_1) > m_1 \cap\ \hat{D}_2(\tau_2) > m_2$
 
 - 3. Our RMST Rejection method
-    - $E(\tau_1)-C(\tau_1)>m_1$ & $E(\tau_1)>t_1$ & $E(\tau_2)-C(\tau_2)>m_2\$ & $E(\tau_2)>t_2$  
+    - $\hat{D}_1(\tau_1) > m_1\ \cap\ \hat{R}_{E1}(\tau_1)> q_1\ \cap\ \hat{D}_2(\tau_2) > m_2\ \cap\ \hat{R}_{E2}(\tau_2)> q_2$  
 
 ****
 ## Asymptotic Normality of RMST:
 ```math
-[E_1-C_1,\ E_1,\ E_2-C_2,\ E_2] \sim \mathcal{N}\ (\ \hat{\mu},\ \hat{\Sigma}\ )
-```
-
-```math
-\hat{\Sigma} = 
- \left[
- \begin{matrix}
-   Var(E_1)+Var(C_1) & Var(E_1) & Cov(E_1,E_2)+Cov(C_1,C_2) & Cov(E_1,E_2) \\
-                   & Var(E_1) & Cov(E_1,E_2) & Cov(E_1,E_2) \\
-                   &         & Var(E_2)+Var(C_2) & Var(E_2)\\
-                   &         &                 & Var(E_2)\\
-  \end{matrix}
-\right]
+[\hat{D}_1(\tau_1), \hat{R}_{E1}(\tau_1), \hat{D}_2(\tau_2), \hat{R}_{E2}] \sim \mathcal{N}\ (\ \hat{\mu},\ \hat{\Sigma}\ )
 ```
 
 ### Estimated by Monte Carlo Simulation
@@ -68,14 +56,14 @@ Similar to Lu(2021):
 \frac{1}{B}\sum\limits_{i = 1}^{B} 
  \left[
  \begin{matrix}
-   \hat{RMST_{E1}} - \bar{RMST_{E1}} \\
-   \hat{RMST_{E2}} - \bar{RMST_{E2}} \\
+   \hat{D}_{1i} - \Bar{D}_1\\
+   \hat{R}_{E1i} - \Bar{R}_{E1}
   \end{matrix}
-  \right] ^{\bigotimes2}_i  
+  \right] ^{\bigotimes2} 
  ```  
   
 ```math
-  \bar{RMST_{E1}} = \frac{1}{B}\sum^{B}_{i = 1}RMST_{E1,i}
+  \Bar{D}_1 &= \frac{1}{B}\sum_{i=1}^B \hat{D}_{1i}
 ```  
 The theoretical RMST value did not consider accrual and censoring distribution.
 
@@ -92,7 +80,7 @@ In order to solve the critical values $(m_1,\ t_1,\ m_2,\ t_2)$, a function that
 \large \mathcal{f}(\tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\tilde{N}}{N}}
 ```
 
-$\tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms. $\hat{D}_i = \hat{R}_{Ei} - \hat{R}_{Ci}$. Then we set the following constraints:   
+$\tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.  Then we set the following constraints:   
 
 ```math
 \begin{aligned}
@@ -120,8 +108,8 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 ****
 ## Result
 ### Under Proportional Hazard Scenario  
-We used $\frac{\lambda_{E}}{\lambda_{C}}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate $r = 90$(patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
-The performances of three methods are compared with different Hazard Ratio(under H1) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
+We used $\lambda_{E}/\lambda_{C}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate $r = 90$(patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
+The performances of three methods are compared with different Hazard Ratio(under $H_1$) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
 
 <p align="center"> 
 <img src="figures/Comparison/PH.png" alt="Result Under PH" width="900" height="600">
