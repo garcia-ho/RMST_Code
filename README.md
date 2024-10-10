@@ -26,19 +26,19 @@ $H_1:\ \lambda_E(t) < \lambda_C(t)$
     - $\frac{W_1}{\sigma_1}>c_1$ & $\frac{W}{\sigma}>c$, where $\frac{W}{\sigma}>c$ is the normal log rank test statistics    
 According to Jung(2017), two stages log-ranktest can reach a similar power as corresponding single stage test if the interim period, $c_1,\ c$ are well selected. 
 
-$\hat{R}_E, \hat{R}_C$ are the RMST value of experiment group and the control group respectively.   
-$\tau$ is the cutoff time point of interim period(1) and overall trial(2). $\hat{D}_i = \hat{R}_{E} - \hat{R}_{C}$.
+$R_E, R_C$ are the RMST value of experiment group and the control group respectively.   
+$\tau$ is the cutoff time point of interim period(1) and overall trial(2). $D_i = \R_{Ei} - R_{Ci}$.
 
 - 2. Simple RMST Difference  
-    - $\hat{D}_1(\tau_1) > m_1 \cap\ \hat{D}_2(\tau_2) > m_2$
+    - $D_1 > m_1 \cap\ D_2 > m_2$
 
 - 3. Our RMST Rejection method
-    - $\hat{D}_1(\tau_1) > m_1\ \cap\ \hat{R}_{E1}(\tau_1)> q_1\ \cap\ \hat{D}_2(\tau_2) > m_2\ \cap\ \hat{R}_{E2}(\tau_2)> q_2$  
+    - $D_1 > m_1\ \cap\ R_{E1}> q_1\ \cap\ D_2 > m_2\ \cap\ R_{E2}> q_2$  
 
 ****
 ## Asymptotic Normality of RMST:
 ```math
-[\hat{D}_1(\tau_1), \hat{R}_{E1}(\tau_1), \hat{D}_2(\tau_2), \hat{R}_{E2}] \sim \mathcal{N}\ (\ \hat{\mu},\ \hat{\Sigma}\ )
+[\hat{D}_1(\tau_1),\ \hat{R}_{E1}(\tau_1),\ \hat{D}_2(\tau_2),\ \hat{R}_{E2}] \sim \mathcal{N}\ (\ \hat{\mu},\ \hat{\Sigma}\ )
 ```
 
 ### Estimated by Monte Carlo Simulation
