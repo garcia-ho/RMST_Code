@@ -86,19 +86,18 @@ Reference: Zhou(2017) BOP2 Bayesian design:
 [Zhou H, Lee J J, Yuan Y. BOP2: Bayesian optimal design for phase II clinical trials with simple and complex endpoints[J]. Statistics in medicine, 2017, 36(21): 3302-3314.](https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.7338)  
 
 
-In order to solve the critical values ($m_1,\ t_1,\ m_2,\ t_2$), a function that can control the normal probability is required. The following $\mathcal{f}(n)$ is what we proposed. 
+In order to solve the critical values $(m_1,\ t_1,\ m_2,\ t_2)$, a function that can control the normal probability is required. The following $\mathcal{f}(n)$ is what we proposed. 
 
 ```math
-\large \mathcal{f}(\Tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\Tilde{N}}{N}}
+\large \mathcal{f}(\tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\tilde{N}}{N}}
 ```
 
-$\Tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms. $\hat{D}_i = \hat{R}_{Ei} - \hat{R}_{Ci}$
-Then we set the following constraints:   
+$\tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms. $\hat{D}_i = \hat{R}_{Ei} - \hat{R}_{Ci}$. Then we set the following constraints:   
 
 ```math
 \begin{aligned}
-P(\hat{D}_1(\tau_1)> m_1) &= f(\Tilde{N}) \\
-P(\hat{D}_1(\tau_1) > m_1 \cap \hat{R}_{E1}(\tau_1)> q_1) &= \lambda \cdot f(\Tilde{N}) \\
+P(\hat{D}_1(\tau_1)> m_1) &= f(\tilde{N}) \\
+P(\hat{D}_1(\tau_1) > m_1 \cap \hat{R}_{E1}(\tau_1)> q_1) &= \lambda \cdot f(\tilde{N}) \\
 P(\hat{D}_2(\tau_2) > m_2) &= f(N) \\
 P(\hat{D}_2(\tau_2) > m_2 \cap \hat{R}_{E2}(\tau_2)> q_2) &= \lambda \cdot f(N) \\
 \lambda \in (0,1).\\ 
