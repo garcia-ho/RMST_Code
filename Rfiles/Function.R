@@ -561,11 +561,11 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
       #Grid search
-      crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.01), .combine = 'cbind') %dopar%
+      crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.02), .combine = 'cbind') %dopar%
       {   
         best_gamma <- c()
         best_power <- 0
-        for (gamma in seq(0, 2, by = 0.02))
+        for (gamma in seq(0, 1, by = 0.01))
           {
             p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
             p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)
