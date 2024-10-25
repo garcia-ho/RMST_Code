@@ -561,7 +561,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
       #Grid search
-      crit_val_res <- foreach(lambda = seq(0.5, 0.99, 0.01), .combine = 'cbind') %dopar%
+      crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.01), .combine = 'cbind') %dopar%
       {   
         best_gamma <- c()
         best_power <- 0
@@ -586,10 +586,10 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             else if (method == 'Complex') 
             {
               # Second equation P(E1-C1 > m1 & E1 > t1) = p2_tar
-              t1 <- uniroot(norm_2d, interval = c(0, 100), m = m1, 
+              t1 <- uniroot(norm_2d, interval = c(0, 20), m = m1, 
                           mean = mu1, sigma = sigma1, tar_prob = p2_tar)$root
               # Forth equation
-              t2 <- uniroot(norm_2d, interval = c(0, 100), m = m2, 
+              t2 <- uniroot(norm_2d, interval = c(0, 20), m = m2, 
                         mean = mu2, sigma = sigma2, tar_prob = p4_tar)$root
             }
 
@@ -600,7 +600,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
 
             if (is.null(power))
             {
-              if (m1 > 0 & m2 > 0 & proc_h0 / sim_size <= alpha 
+              if ( proc_h0 / sim_size <= alpha 
                 & proc_h1 / sim_size > best_power)  #control alpha, find the most powerful set
               {
                 best_power <- proc_h1 / sim_size
@@ -611,8 +611,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             # If the power is given, we return the result with minimal E(N)
             else
             {
-              if (m1 > 0 & m2 > 0 & proc_h0 / sim_size <= alpha 
-                & proc_h1 / sim_size >= power)  #control alpha, find the most powerful set
+              if ( proc_h0 / sim_size <= alpha 
+                 & proc_h1 / sim_size >= power)  #control alpha, find the most powerful set
               {
                 PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < m1) | 
                       (rmst_h0_int[2, ] < t1)) / sim_size
