@@ -563,11 +563,11 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
           return (prob - tar_prob)
         }
 
-      crit_val_res <- foreach(lambda = seq(0.01, 0.99, 0.02), .combine = 'cbind') %dopar%
+      crit_val_res <- foreach(lambda = seq(0.9, 0.999, 0.001), .combine = 'cbind') %dopar%
       {   
         best_gamma <- c()
         best_power <- 0
-        for (gamma in seq(0, 1, by = 0.01))
+        for (gamma in seq(0.001, 0.5, by = 0.005))
           {
             p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
             p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)
