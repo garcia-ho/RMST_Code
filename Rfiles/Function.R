@@ -537,7 +537,7 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
 # _______________ If power is given, it will retern critical value with min E(N)_________________
 
 adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, 
-                        sim_size, method, alpha, power = NULL) 
+                        sim_size, method, alpha, power = NULL, find_opt_n = NULL) 
   {
       # Interim
       mu1 <- mu_cov_h1$mu[c(1,2)]
@@ -551,121 +551,6 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
 
-  #     find_critical_values <- function(mean_vec, cov_mat, p) 
-  #         {
-  #           objective_function <- function(critical_values) 
-  #             {
-  #               m <- critical_values[1]
-  #               q <- critical_values[2]
-  #               lower <- c(m, q)
-  #               upper <- rep(Inf, 2)
-  #               # Apply penalty for negative q
-  #               penalty <- ifelse(q < 0, 1000 * (abs(q)), 0)
-  #               prob <- pmvnorm(lower = lower, upper = upper, mean = mean_vec, sigma = cov_mat)
-  #               return((prob - p)^2 + penalty)
-  #             }
-  
-  #           result <- optim(par = c(0, 0), fn = objective_function)
-  #           return(result$par)
-  #         }
-
-  #     best_gamma <- c()
-  #     best_power <- 0
-  #     lambda <- 1  # useless here
-  #     for (gamma in seq(0, 1, by = 0.002))
-  #     {   
-  #       p1_tar <- exp(-gamma * (int_n / fin_n))
-  #       p2_tar <- exp(-gamma * (fin_n / fin_n))
-  #       if (method == 'Simple')
-  #           {
-  #             m1 <- qnorm(1 - p1_tar, mean = mu1[1], sd = sqrt(sigma1[1, 1]))
-  #             m2 <- qnorm(1 - p2_tar, mean = mu2[1], sd = sqrt(sigma2[1, 1])) 
-  #             q1 <- 0
-  #             q2 <- 0
-  #           }
-
-  #       else if (method == 'Complex') 
-  #           {
-  #              
-  #           }
-          
-  #         proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > q1) &
-  #                     (rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m2) & (rmst_h0_fin[2, ] > q2))
-  #         proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > q1) &
-  #                     (rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m2) & (rmst_h1_fin[2, ] > q2))
-
-  #       if (is.null(power))
-  #           {
-  #             if ( abs(proc_h0 / sim_size - alpha) <= 0.05 * alpha 
-  #               & proc_h1 / sim_size > best_power)  #control alpha, find the most powerful set
-  #             {
-  #               best_power <- proc_h1 / sim_size
-  #               best_gamma <- c(m1, t1, m2, t2, lambda, gamma, proc_h0/sim_size, proc_h1/sim_size)
-  #             }
-  #           }
-
-  #       else
-  #         {
-  #           if ( abs(proc_h0 / sim_size - alpha) <= 0.05 * alpha 
-  #                & proc_h1 / sim_size >= power)  #control alpha, find the most powerful set
-  #             {
-  #               PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < m1) | 
-  #                     (rmst_h0_int[2, ] < t1)) / sim_size
-  #               PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < m1) | 
-  #                     (rmst_h1_int[2, ] < t1)) / sim_size
-  #               best_gamma <- cbind(best_gamma, c(m1, t1, m2, t2, 
-  #                             lambda, gamma, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
-  #             }
-  #         }
-
-  #         crit_val_res <- best_gamma
-  #         if (is.null(power))  # find the most powerful critical values
-  #           {
-  #           if (is.null(crit_val_res) ) 
-  #             {   # Return NULL when something goes wrong
-  #               return(data.frame(m1 = 0, t1 = 0, m2 = 0, t2 = 0, lambda = 0,
-  #                       gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0))
-  #             }
-  #           best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
-  #           PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < best_res[1]) | 
-  #                 (rmst_h0_int[2, ] < best_res[2])) / sim_size
-  #           PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < best_res[1]) | 
-  #                 (rmst_h1_int[2, ] < best_res[2])) / sim_size
-
-  #           return(data.frame(m1 = best_res[1], t1 = best_res[2], m2 = best_res[3],
-  #                       t2 = best_res[4], lambda = best_res[5], gamma = best_res[6],
-  #                       PET0 = PET0, PET1 = PET1, alpha = best_res[7], power = best_res[8]))
-  #           }
-
-  #     else # find the min E(N)|H0 critical values
-  #     {   
-  #         if (is.null(crit_val_res)) 
-  #         {   # Return NULL when something goes wrong
-  #           return(data.frame(m1 = 0, t1 = 0, m2 = 0, t2 = 0, lambda = 0,
-  #                       gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
-  #                       EN0 = NA, EN1 = NA, EN = NA))
-  #         }
-  #         # calculate E(N)
-  #         PET <- (crit_val_res[7, ] + crit_val_res[8, ]) / 2
-  #         crit_val_res <- rbind (crit_val_res, crit_val_res[7, ]  * int_n + 
-  #                               (1 - crit_val_res[7, ] ) * fin_n)
-  #         crit_val_res <- rbind (crit_val_res, crit_val_res[8, ] * int_n + 
-  #                               (1 - crit_val_res[8, ]) * fin_n)
-  #         crit_val_res <- rbind (crit_val_res, PET * int_n + (1-PET) * fin_n)
-  #         # min EN
-  #         best_res <- crit_val_res[, which(crit_val_res[13, ] == min(crit_val_res[13, ]))] 
-  #         best_res <- data.frame(t(best_res))
-  #         colnames(best_res) <- c('m1', 't1', 'm2', 't2', 'lambda', 'gamma',
-  #                                 'PET0', 'PET1', 'alpha', 'power', 'EN0', 'EN1', 'EN')
-          
-  #         if (method == 'Simple') 
-  #           {  # lambda is not working for simple RMST
-  #           best_res <- best_res[1, ]
-  #           }
-  #         return(best_res)
-  #     }
-  #   }
-  # }
 
 #__________________________________ Original grid searching_____________________________
       # Function to minimize solve t in P(E-C > m & E > t) = tar_prob given m
@@ -729,7 +614,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             else
             {
               if ( proc_h0 / sim_size <= alpha 
-                 & proc_h1 / sim_size >= power)  #control alpha, find the most powerful set
+                 & proc_h1 / sim_size >= power)  
               {
                 PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < m1) | 
                       (rmst_h0_int[2, ] < t1)) / sim_size
@@ -776,9 +661,17 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
           crit_val_res <- rbind (crit_val_res, crit_val_res[8, ] * int_n + 
                                 (1 - crit_val_res[8, ]) * fin_n)
           crit_val_res <- rbind (crit_val_res, PET * int_n + (1-PET) * fin_n)
-          # min EN
-          best_res <- crit_val_res[, which(crit_val_res[13, ] == min(crit_val_res[13, ]))] 
-          best_res <- data.frame(t(best_res))
+
+          if (find_opt == TRUE)  # in optimal design searching, return all results
+          {
+            best_res <- data.frame(t(crit_val_res))
+          }
+
+          else  # for a specific interim n and total N
+          { # min EN
+            best_res <- crit_val_res[, which(crit_val_res[13, ] == min(crit_val_res[13, ]))] 
+            best_res <- data.frame(t(best_res))
+          }
           colnames(best_res) <- c('m1', 't1', 'm2', 't2', 'lambda', 'gamma',
                                   'PET0', 'PET1', 'alpha', 'power', 'EN0', 'EN1', 'EN')
           
