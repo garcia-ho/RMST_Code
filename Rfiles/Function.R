@@ -537,7 +537,7 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
 # _______________ If power is given, it will retern critical value with min E(N)_________________
 
 adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, 
-                        sim_size, method, alpha, power = NULL, find_opt_n = NULL) 
+                        sim_size, method, alpha, power = NULL, find_opt = NULL) 
   {
       # Interim
       mu1 <- mu_cov_h1$mu[c(1,2)]
@@ -602,7 +602,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
 
             if (is.null(power))
             {
-              if ( proc_h0 / sim_size <= alpha 
+              if ( abs(proc_h0 / sim_size - alpha) <= 0.05 * alpha 
                 & proc_h1 / sim_size > best_power)  #control alpha, find the most powerful set
               {
                 best_power <- proc_h1 / sim_size
@@ -613,8 +613,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             # If the power is given, we return the result with minimal E(N)
             else
             {
-              if ( proc_h0 / sim_size <= alpha 
-                 & proc_h1 / sim_size >= power)  
+              if ( abs(proc_h0 / sim_size - alpha) <= 0.05 * alpha
+                 & abs(proc_h1 / sim_size - power) <= 0.05 * power)  
               {
                 PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < m1) | 
                       (rmst_h0_int[2, ] < t1)) / sim_size
