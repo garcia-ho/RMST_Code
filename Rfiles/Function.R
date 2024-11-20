@@ -551,6 +551,59 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
 
+      cal_q <- function(m, tar_prob, mu, sigma) 
+      {
+        mu_D <- mu[1]
+        mu_E <- mu[2]
+        sigma_D <- sqrt(sigma[1, 1])
+        sigma_E <- sqrt(sigma[2, 2])
+        rho <- sigma[1, 2] / (sqrt(sigma[1, 1]) * sqrt(sigma[2, 2]))
+
+        # Cond mean and variance of b given D = m
+        cond_mean <- mu_E + rho * (sigma_E / sigma_D) * (m - mu_D)
+        cond_sd <- sigma_E * sqrt(1 - rho^2)
+  
+        # Calculate q such that P(E > q | D = m) = p
+        q <- qnorm(tar_prob, mean = cond_mean, sd = cond_sd, lower.tail = FALSE)
+        return(q)
+      }
+
+      # searching boundary of m
+      ub_m <- quantile(rmst_h1_fin[2,] - rmst_h1_fin[1, ], 0.8)
+      lb_m <- quantile(rmst_h0_int[2,] - rmst_h0_int[1, ], 0.2)
+
+    crit_val_res <- foreach(gamma = seq(0.1, 5, by = 0.1), .combine = 'cbind') %dopar%
+      {
+        p_int_tar <- exp(-gamma * (int_n / fin_n)) 
+        p_fin_tar <- exp(-gamma * (fin_n / fin_n)) 
+
+        if (method == 'Complex') {
+          m1_values <- seq(lb_m, ub_m, by = (ub_m - lb_m) / 200) 
+          q1_values <- sapply(m1_values, cal_q, tar_prob = p_int_tar, mu = mu1, sigma = sigma1)
+          q2_values <- sapply(m1_values, cal_q, tar_prob = p_fin_tar, mu = mu2, sigma = sigma2)
+        }
+
+
+
+      }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #__________________________________ Original grid searching_____________________________
       # Function to minimize solve t in P(E-C > m & E > t) = tar_prob given m
