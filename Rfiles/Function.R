@@ -551,53 +551,94 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
 
-      cal_q <- function(m, tar_prob, mu, sigma) 
-      {
-        mu_D <- mu[1]
-        mu_E <- mu[2]
-        sigma_D <- sqrt(sigma[1, 1])
-        sigma_E <- sqrt(sigma[2, 2])
-        rho <- sigma[1, 2] / (sqrt(sigma[1, 1]) * sqrt(sigma[2, 2]))
+#__________________________________ New grid searching_____________________________
 
-        # Cond mean and variance of b given D = m
-        cond_mean <- mu_E + rho * (sigma_E / sigma_D) * (m - mu_D)
-        cond_sd <- sigma_E * sqrt(1 - rho^2)
+    # cal_q <- function(m, tar_prob, mu, sigma) 
+    #   {
+    #     mu_D <- mu[1]
+    #     mu_E <- mu[2]
+    #     sigma_D <- sqrt(sigma[1, 1])
+    #     sigma_E <- sqrt(sigma[2, 2])
+    #     rho <- sigma[1, 2] / (sigma_D * sigma_E) #corr
+    #     #truncated normal
+    #     alpha <- (m - mu_D) / sigma_D  
+
+    #     # Mean and variance of the truncated normal distribution D | D > m
+    #     mean_D_given_D_gt_m <- mu_D + sigma_D * dnorm(alpha) / (1 - pnorm(alpha))
+    #     var_D_given_D_gt_m <- sigma_D^2 * (1 - (alpha * dnorm(alpha) / (1 - pnorm(alpha))) - 
+    #                                       (dnorm(alpha) / (1 - pnorm(alpha)))^2)
+    #     # Mean of E given D > m
+    #     mean_E_given_D_gt_m <- mu_E + rho * (sigma_E / sigma_D) * (mean_D_given_D_gt_m - mu_D)
+
+    #     # Variance of E given D > m
+    #     var_E_given_D_gt_m <- (1 - rho^2) * sigma_E^2 + (rho * sigma_E / sigma_D)^2 * var_D_given_D_gt_m
   
-        # Calculate q such that P(E > q | D = m) = p
-        q <- qnorm(tar_prob, mean = cond_mean, sd = cond_sd, lower.tail = FALSE)
-        return(q)
-      }
+    #     # Calculate q such that P(E > q | D > m) = p
+    #     q <- qnorm(tar_prob, mean = mean_E_given_D_gt_m, sd = sqrt(var_E_given_D_gt_m), lower.tail = FALSE)
+    #     if (is.nan(q)) {
+    #       return(NA)
+    #       } 
+    #     else {
+    #       return(q)
+    #       }
+    #   }
 
-      # searching boundary of m
-      ub_m <- quantile(rmst_h1_fin[2,] - rmst_h1_fin[1, ], 0.8)
-      lb_m <- quantile(rmst_h0_int[2,] - rmst_h0_int[1, ], 0.2)
+    # safe_cal_q <- function(m, tar_prob, mu, sigma) {
+    #     suppressWarnings(cal_q(m, tar_prob, mu, sigma))
+    #   }
+    
+    # cal_proc <- function(rmst_int, rmst_fin, m1, q1, m2, q2) {
+    #                 sum((rmst_int[2, ] - rmst_int[1, ] > m1) & (rmst_int[2, ] > q1) &
+    #                     (rmst_fin[2, ] - rmst_fin[1, ] > m2) & (rmst_fin[2, ] > q2)) / sim_size
+    #                 }
+    # cal_pet <- function(rmst_int, m1, q1){
+    #                 sum((rmst_int[2, ] - rmst_int[1, ] < m1) | 
+    #                     (rmst_int[2, ] < t1)) / sim_size
+    #                 }
 
-    crit_val_res <- foreach(gamma = seq(0.1, 5, by = 0.1), .combine = 'cbind') %dopar%
-      {
-        p_int_tar <- exp(-gamma * (int_n / fin_n)) 
-        p_fin_tar <- exp(-gamma * (fin_n / fin_n)) 
+    # # searching boundary of m
+    # ub_m <- quantile(rmst_h1_fin[2,] - rmst_h1_fin[1, ], 0.7)
+    # lb_m <- quantile(rmst_h0_int[2,] - rmst_h0_int[1, ], 0.3)
 
-        if (method == 'Complex') {
-          m1_values <- seq(lb_m, ub_m, by = (ub_m - lb_m) / 200) 
-          q1_values <- sapply(m1_values, cal_q, tar_prob = p_int_tar, mu = mu1, sigma = sigma1)
-          q2_values <- sapply(m1_values, cal_q, tar_prob = p_fin_tar, mu = mu2, sigma = sigma2)
-        }
+    # crit_val_res <- foreach(gamma = seq(0.1, 5, by = 0.1), .combine = 'cbind') %dopar%
+    #   {
+    #     p_int_tar <- exp(-gamma * (int_n / fin_n)) 
+    #     p_fin_tar <- exp(-gamma * (fin_n / fin_n)) 
+
+    #     if (method == 'Complex') 
+    #     {
+    #       m1_values <- seq(lb_m, ub_m, by = (ub_m - lb_m) / 100) 
+    #       #interim
+    #       q1_values <- sapply(m1_values, safe_cal_q, tar_prob = p_int_tar, 
+    #                           mu = mu1, sigma = sigma1)
+    #       mq1 <- cbind(m1_values, q1_values)
+    #       mq1 <- data.frame(mq1[!is.na(mq1[,2]),])
+          
+    #       # #final
+    #       q2_values <- sapply(m1_values, safe_cal_q, tar_prob = p_fin_tar, 
+    #                           mu = mu2, sigma = sigma2)
+    #       mq2 <- cbind(m1_values, q2_values)
+    #       mq2 <- data.frame(mq2[!is.na(mq2[,2]),])
+    #       # all combinations of m1, m2
+          
+    #       combinations <- expand.grid(m1 = mq1$m1_values, m2 = mq2$m1_values)
+    #       combinations$q1 <- mq1$q1_values[match(combinations$m1, mq1$m1_values)]
+    #       combinations$q2 <- mq2$q2_values[match(combinations$m2, mq2$m1_values)]
+
+    #       combinations$proc_h0 <- sapply(1:nrow(combinations), function(i) {
+    #                           cal_proc(rmst_h0_int, rmst_h0_fin, combinations$m1[i], combinations$q1[i], 
+    #                                   combinations$m2[i], combinations$q2[i]) })
+    #       combinations$proc_h1 <- sapply(1:nrow(combinations), function(i) {
+    #                           cal_proc(rmst_h1_int, rmst_h1_fin, combinations$m1[i], combinations$q1[i], 
+    #                                   combinations$m2[i], combinations$q2[i]) }) 
+
+
+    #       }
+    #     }
 
 
 
-      }
-
-
-
-
-
-
-
-
-
-
-
-
+    #   }
 
 
 
@@ -607,6 +648,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
 
 #__________________________________ Original grid searching_____________________________
       # Function to minimize solve t in P(E-C > m & E > t) = tar_prob given m
+
       norm_2d <- function(t, m, mean, sigma, tar_prob) 
         {
           prob <- pmvnorm(lower = c(m, t), 
