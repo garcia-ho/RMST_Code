@@ -583,15 +583,15 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
           }
       }
 
-    safe_cal_q <- function(m, tar_prob, mu, sigma) {
+  safe_cal_q <- function(m, tar_prob, mu, sigma) {
       suppressWarnings(cal_q(m, tar_prob, mu, sigma))
     }
 
-    cal_proc <- function(rmst_int, rmst_fin, m1, q1, m2, q2) {
+  cal_proc <- function(rmst_int, rmst_fin, m1, q1, m2, q2) {
                        sum((rmst_int[2, ] - rmst_int[1, ] > m1) & (rmst_int[2, ] > q1) &
                             (rmst_fin[2, ] - rmst_fin[1, ] > m2) & (rmst_fin[2, ] > q2)) / sim_size
                       }
-    cal_pet <- function(rmst_int, m1, q1){
+  cal_pet <- function(rmst_int, m1, q1){
                       sum((rmst_int[2, ] - rmst_int[1, ] < m1) | 
                           (rmst_int[2, ] < q1)) / sim_size
                       }
