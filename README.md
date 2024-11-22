@@ -76,20 +76,21 @@ Reference: Zhou(2017) BOP2 Bayesian design:
 In order to solve the critical values $(m_1,\ t_1,\ m_2,\ t_2)$, a function that can control the normal probability is required. The following $\mathcal{f}(n)$ is what we proposed. 
 
 ```math
-\large \mathcal{f}(\tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\tilde{N}}{N}}
+\large \mathcal{f}(\tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\tilde{N}}{N}} \\
+\gamma > 0.\\
 ```
 
 $\tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.  Then we set the following constraints:   
 
 ```math
 \begin{aligned}
-P(\hat{D}_1(\tau_1)> m_1) &= f(\tilde{N}) \\
-P(\hat{D}_1(\tau_1) > m_1 \cap \hat{R}_{E1}(\tau_1)> q_1) &= \lambda \cdot f(\tilde{N}) \\
-P(\hat{D}_2(\tau_2) > m_2) &= f(N) \\
-P(\hat{D}_2(\tau_2) > m_2 \cap \hat{R}_{E2}(\tau_2)> q_2) &= \lambda \cdot f(N) \\
+P(\hat{R}_{E1}(\tau_1)> q_1\ |\ \hat{D}_1(\tau_1) > m_1 ) &=  f(\tilde{N}) \\
+P(\hat{R}_{E2}(\tau_2)> q_2\ |\ \hat{D}_2(\tau_2) > m_2) &= f(N) \\
 \lambda \in (0,1).\\ 
 \end{aligned}
 ```
+The distribution of $E_i\ |\ D_i > m_i$ can be derived by conditional normality, doulbe expection and variance formula.
+
 
 $\mathcal{f}(\tilde{N})$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
 #### It leads to a small early stop probability with an insufficient interim sample size.  
@@ -100,9 +101,8 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 ```
 
 2 grid searching strategies can be conducted:
-#### 1. Two-stage Most Powerful Design with Fixed Sample Size
-#### 2. Two-stage Optimal Design Minimizing $\overline{EN}$ 
 
+#### 2. Two-stage Optimal Design Minimizing $\overline{EN}$ 
 
 ****
 ## Result
@@ -126,6 +126,14 @@ The comparison of three methods under different setting is shown below:
 
 The graph shows us that our method have higher power while preserving the type I error under different early difference settings. Higher PET0 and relatively acceptable sacrifice of PET1. 
 
+
+*****
+### Visualization of the bivariate normal projection of RMST in interim and final 
+
+![The bivariate normal projection](figures/2-d-normal-projection.jpg)  
+
+The dotted lines are exmaple decision boundaries and shaded area is the critical region of a most powerful design .
+The difference in final stage is more significant. 
 
 ****
 ### Visualization of Sculpted Rejection Region 

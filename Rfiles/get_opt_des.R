@@ -99,7 +99,8 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
         }
     }
     else{
-        return(all_result[which(all_result$EN == min(all_result$EN, na.rm = TRUE)), ])
+        return(all_result)
+        #return(all_result[which(all_result$EN == min(all_result$EN, na.rm = TRUE)), ])
         # return the result with minimal EN
     }
    
