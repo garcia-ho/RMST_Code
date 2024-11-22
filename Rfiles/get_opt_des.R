@@ -55,7 +55,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
 
             best_our <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                     int_n = interim * r, fin_n = N, sim_size = sim_size, method = method,
-                    alpha = alpha, power = power, find_opt = TRUE)
+                    alpha = alpha, power = power)
         }
 
         else if (method == 'logrank')   # search the min(E(N)) using log rank test
