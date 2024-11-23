@@ -76,7 +76,7 @@ Reference: Zhou(2017) BOP2 Bayesian design:
 In order to solve the critical values $(m_1,\ q_1,\ m_2,\ q_2)$, a function that can control the normal probability is required. The following $\mathcal{f}(n)$ is what we proposed. 
 
 ```math
- \mathcal{f}(\tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\tilde{N}}{N}},\ \gamma > 0.\\
+ f(\tilde{N}) = e^{-\ \gamma · \frac{\tilde{N}}{N}},\ \gamma > 0. \\
 ```
 
 $\tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.  Then we set the following constraints:   
