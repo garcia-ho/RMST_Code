@@ -76,7 +76,7 @@ Reference: Zhou(2017) BOP2 Bayesian design:
 In order to solve the critical values $(m_1,\ t_1,\ m_2,\ t_2)$, a function that can control the normal probability is required. The following $\mathcal{f}(n)$ is what we proposed. 
 
 ```math
-\large \mathcal{f}(\tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\tilde{N}}{N}} \\
+ \mathcal{f}(\tilde{N}) = \mathcal{e}^{-\ \gamma · \frac{\tilde{N}}{N}} \\
 \gamma > 0.\\
 ```
 
@@ -89,7 +89,7 @@ P(\hat{R}_{E2}(\tau_2)> q_2\ |\ \hat{D}_2(\tau_2) > m_2) &= f(N) \\
 \lambda \in (0,1).\\ 
 \end{aligned}
 ```
-The distribution of $E_i\ |\ D_i > m_i$ can be derived by conditional normality, doulbe expection and variance formula.
+The distribution of $E_i\ |\ D_i > m_i$ can be derived by conditional normality, double expection and variance formula.
 
 
 $\mathcal{f}(\tilde{N})$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
@@ -100,13 +100,11 @@ Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ deter
 \large \alpha = P(\hat{D}_1(\tau_1) > m_1\ \cap\ \hat{R}_{E1}(\tau_1)> q_1\ \cap\ \hat{D}_2(\tau_2) > m_2\ \cap\ \hat{R}_{E2}(\tau_2)> q_2\ |\ H_0)
 ```
 
-2 grid searching strategies can be conducted:
-
-#### 2. Two-stage Optimal Design Minimizing $\overline{EN}$ 
 
 ****
 ## Result
-### Under Proportional Hazard Scenario  
+### Two-stage Optimal Design Minimizing $\overline{EN}$ 
+### 1. Under Proportional Hazard Scenario  
 We used $\lambda_{E}/\lambda_{C}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate $r = 90$(patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
 The performances of three methods are compared with different Hazard Ratio(under $H_1$) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
 
@@ -115,7 +113,7 @@ The performances of three methods are compared with different Hazard Ratio(under
 </p>
 
 
-### Under Early Difference Scenario
+### 2. Under Early Difference Scenario
 The survival function of two groups are shown below: 
 <p align="center"> 
 <img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="420" height="300">
