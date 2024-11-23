@@ -73,7 +73,9 @@ Reference: Zhou(2017) BOP2 Bayesian design:
 [Zhou H, Lee J J, Yuan Y. BOP2: Bayesian optimal design for phase II clinical trials with simple and complex endpoints[J]. Statistics in medicine, 2017, 36(21): 3302-3314.](https://onlinelibrary.wiley.com/doi/abs/10.1002/sim.7338)  
 
 
-In order to solve the critical values $(m_1,\ q_1,\ m_2,\ q_2)$, a function that can control the normal probability is required. we proposed $\mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}$, where $\gamma > 0$. 
+In order to solve the critical values $(m_1,\ q_1,\ m_2,\ q_2)$, a function that can control the normal probability is required. 
+
+We proposed $\mathcal{f}(n) = \mathcal{e}^{-\ \gamma · \frac{n}{N}}$, where $\gamma > 0$. 
 
 $\tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total sample size of 2 arms.  Then we set the following constraints:   
 
