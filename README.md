@@ -92,9 +92,9 @@ P(\hat{R}_{E2}(\tau_2)> q_2\ |\ \hat{D}_2(\tau_2) > m_2) &= f(N) \\
 The distribution of $E_i\ |\ D_i > m_i$ can be derived by conditional normality, double expection and variance formula.
 
 
-$\mathcal{f}(\tilde{N})$ is a monotonously decereasing funciton of n, which means that two probability constraints in interim period will go up when the interim sample size n decrease.  
+$\mathcal{f}(\tilde{N})$ is a monotonously decereasing funciton of $\tilde{N}$, which means that two probability constraints in interim period will go up when the interim sample size $\tilde{N}$ decrease.  
 #### It leads to a small early stop probability with an insufficient interim sample size.  
-Then we grid search $(\lambda, \gamma)$ . Each pair of $(\lambda, \gamma)$ determines a set of ($m_1,\ t_1,\ m_2,\ t_2$) by normal calculation. Record critical values sets that yield the desirable overall type I error $\alpha$:  
+Then we search $\gamma$ within a certain range, say (-1,1) . Each $\gamma$ determines a set of ($m_1,\ q_1,\ m_2,\ q_2$) by normal calculation. Record critical values sets that yield the desirable overall type I error $\alpha$:  
 
 ```math  
 \large \alpha = P(\hat{D}_1(\tau_1) > m_1\ \cap\ \hat{R}_{E1}(\tau_1)> q_1\ \cap\ \hat{D}_2(\tau_2) > m_2\ \cap\ \hat{R}_{E2}(\tau_2)> q_2\ |\ H_0)
@@ -145,10 +145,8 @@ Move on to the discussion of parameters $(\gamma, \lambda)$ in grid search proce
 
 
 
-
-
 ****
-### Robustness
+### Global Robustness
 Within the hypothesis of a trial: 
 ```math
 \begin{aligned}
@@ -170,5 +168,5 @@ The simulation processes of single stage and two stages are stored at different 
 
 
 --------------
-Vamos García
+By García
 
