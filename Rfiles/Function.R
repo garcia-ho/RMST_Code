@@ -570,11 +570,14 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
         var_D_given_D_gt_m <- sigma_D^2 * (1 - (alpha * dnorm(alpha) / (1 - pnorm(alpha))) - 
                                           (dnorm(alpha) / (1 - pnorm(alpha)))^2)
         # Mean of E given D > m
-        mean_E_given_D_gt_m <- mu_E + rho * (sigma_E / sigma_D) * (mean_D_given_D_gt_m - mu_D)
+        mean_E_given_D_gt_m <- mu_E + rho * (sigma_E / sigma_D) * 
+                              (mean_D_given_D_gt_m - mu_D)
         # Variance of E given D > m
-        var_E_given_D_gt_m <- (1 - rho^2) * sigma_E^2 + (rho * sigma_E / sigma_D)^2 * var_D_given_D_gt_m
+        var_E_given_D_gt_m <- (1 - rho^2) * sigma_E^2 + 
+                              (rho * sigma_E / sigma_D)^2 * var_D_given_D_gt_m
         # Calculate q such that P(E > q | D > m) = p
-        q <- qnorm(tar_prob, mean = mean_E_given_D_gt_m, sd = sqrt(var_E_given_D_gt_m), lower.tail = FALSE)
+        q <- qnorm(tar_prob, mean = mean_E_given_D_gt_m, sd = sqrt(var_E_given_D_gt_m), 
+                    lower.tail = FALSE)
         if (is.nan(q)) {
           return(NA)
           } 
@@ -693,8 +696,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       {   
         if (dim(crit_val_res)[1] == 0) 
           {   # Return NULL when something goes wrong
-            return(data.frame(m1 = 0, t1 = 0, m2 = 0, t2 = 0, gamma = 0, 
-                        PET0 = 0, PET1 = 0, alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
+            return(data.frame(m1 = 0, q1 = 0, m2 = 0, q2 = 0, gamma = 0, PET0 = 0, PET1 = 0, 
+            alpha = 0, power = 0, PET = 0, EN0 = NA, EN1 = NA, EN = NA))
           }
           # calculate E(N)
           crit_val_res$PET <- (crit_val_res$PET0 + crit_val_res$PET1) / 2
