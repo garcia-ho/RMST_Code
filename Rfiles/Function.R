@@ -468,25 +468,26 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
     proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
     PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
     PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-    if(abs(proc_h0/sim_size - alpha) < 0.05 * alpha){
+    if(abs(proc_h0/sim_size - alpha) < 0.05 * alpha
+      & proc_h0/sim_size <= alpha){
       return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
     }
   }
-    
+if (is.null(crit_val_res) || dim(crit_val_res)[1] == 0) {   
+      return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
+                        PET = 0, EN0 = NA, EN1 = NA, EN = NA))
+      }
+  crit_val_res <- data.frame(crit_val_res)
+  colnames(crit_val_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+  
+
   if(is.null(power)) # Power is not specified, return the most powerfule result
     {
-      if(is.null(crit_val_res)){
-        return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
-                          alpha = 0, power = 0))
-      }
-      crit_val_res <- data.frame(crit_val_res)
-      colnames(crit_val_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
       powerful_m1 <- crit_val_res[which(crit_val_res$power == max(crit_val_res$power)), ]
 
       if(is.null(dim(powerful_m1))){ #unique solution
         return(powerful_m1)
       }
-
       else {  # find the smallest m1 if multiply solution exist
        return(powerful_m1[which(powerful_m1$m1 == max(powerful_m1$m1)), ])
       }
@@ -494,36 +495,24 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
 
   else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
   {
-    if (is.null(crit_val_res) || dim(crit_val_res)[1] == 0) {   
+    best_res <- crit_val_res[which(crit_val_res$power >= power), ]
+    if (dim(best_res)[1] == 0){ #no valid result
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
                         PET = 0, EN0 = NA, EN1 = NA, EN = NA))
-      }
-      # Follow the power constraint
-    best_res <- crit_val_res[which(crit_val_res$power >= power), ]
-    best_res$PET <- rowMeans(rbind(best_res[3, ], best_res[4, ]))
-
-    best_res <- rbind(best_res, )
-    best_res <- rbind (best_res, best_res[3, ] * int_n + 
-                                (1 - best_res[3, ]) * fin_n)
-    best_res <- rbind (best_res, best_res[4, ] * int_n + 
-                                (1 - best_res[4, ]) * fin_n)
-    best_res <- rbind (best_res, colMeans(rbind(best_res[7, ], best_res[8, ])))
-    
-    if (is.null(best_res) || dim(best_res)[2] == 0) {   
-      return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
-                          alpha = 0, power = 0, PET = 0, EN0 = NA, EN1 = NA, EN = NA))
-      } else if (dim(best_res)[2] > 1) { # not unique solution min E(N)
-      best_res <- best_res[, which(best_res[9, ] == min(best_res[9, ]))]
     }
-    best_res <- data.frame(t(best_res))
-    colnames(best_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 
-                            'power', 'PET', 'EN0', 'EN1', 'EN')
-    if (dim(best_res)[1] > 1) {     # multiple solution, return the first one
-       best_res <- best_res[1, ]
+    best_res$PET <- rowMeans(best_res[, c('PET0','PET1')])
+    best_res$EN0 <- best_res$PET0 * int_n + (1 - best_res$PET0) * fin_n
+    best_res$EN1 <- best_res$PET1 * int_n + (1 - best_res$PET1) * fin_n
+    best_res$EN <- rowMeans(best_res[, c('EN0', 'EN1')])
+    # not unique solution min E(N)
+    best_res <- best_res[which(best_res$EN == min(best_res$EN)), ]
+  }
+  if (dim(best_res)[1] > 1) {     # multiple solution, return the first one
+      best_res <- best_res[1, ]
     }
     return(best_res)
-  }
-}
+ }
+
 
 
 

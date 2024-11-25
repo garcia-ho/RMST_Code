@@ -15,7 +15,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
 {
     N <- 2 * n #overall sample size of two groups
     r <- N / acc_time
-    int_factor <- seq(0.15, 0.7, by = int_step / N)  # Each time interim sample size increase by 6
+    int_factor <- seq(0.25, 0.7, by = int_step / N)  # Each time interim sample size increase by 6
     interim_list <- int_factor * acc_time
 
     data_C <- expo_gen_2stages(N = n * sim_size, acc_time = acc_time, lambda = lambda_H0, dist = 'exp', 
@@ -83,8 +83,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
         }
 
         best_our$interim_n <- ceiling(interim * r)
-        all_result <- rbind(all_result, 
-                            best_our[, c('PET0','PET1','alpha','power','PET','EN0','EN1','EN', 'interim_n')])
+        all_result <- rbind(all_result, best_our)
     }
 
     all_result <- na.omit(all_result)    # drop NA 
