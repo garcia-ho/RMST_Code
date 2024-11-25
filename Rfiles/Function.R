@@ -460,7 +460,7 @@ norm_2d <- function(m2, m1, mean, sigma, alpha)
 m1_low <- quantile(z_stats_h0_int, 0.25)  # Under H0, Z ~ N(0,1)
 m1_up <- quantile(z_stats_h0_int, 0.75) 
 crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
-                    .combine = 'cbind') %dopar% 
+                    .combine = 'rbind') %dopar% 
   {
     m2 <- uniroot(norm_2d, interval = c(0, 100), m1 = m1, mean = mean_h0,
                  sigma = sigma_h0, alpha = alpha)$root
@@ -468,10 +468,9 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
     proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
     PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
     PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-    if(abs(proc_h0/sim_size - alpha) < 0.1 * alpha){
+    if(abs(proc_h0/sim_size - alpha) < 0.05 * alpha){
       return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
     }
-
   }
     
   if(is.null(power)) # Power is not specified, return the most powerfule result
@@ -480,42 +479,45 @@ crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low
         return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
                           alpha = 0, power = 0))
       }
-      powerful_m1 <- crit_val_res[, which(crit_val_res[6, ] == max(crit_val_res[6, ]))]
+      crit_val_res <- data.frame(crit_val_res)
+      colnames(crit_val_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
+      powerful_m1 <- crit_val_res[which(crit_val_res$power == max(crit_val_res$power)), ]
 
       if(is.null(dim(powerful_m1))){ #unique solution
-        opt_pet0_m1 <- powerful_m1
+        return(powerful_m1)
       }
+
       else {  # find the smallest m1 if multiply solution exist
-        opt_pet0_m1 <- powerful_m1[, which(powerful_m1[1, ] == max(powerful_m1[1, ]))]
+       return(powerful_m1[which(powerful_m1$m1 == max(powerful_m1$m1)), ])
       }
-      opt_pet0_m1 <- data.frame(t(opt_pet0_m1))
-      colnames(opt_pet0_m1) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 'power')
-      return(opt_pet0_m1)
     }
 
   else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
   {
-    if (is.null(crit_val_res) || dim(crit_val_res)[2] == 0) {   
-      return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
-                          alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
+    if (is.null(crit_val_res) || dim(crit_val_res)[1] == 0) {   
+      return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
+                        PET = 0, EN0 = NA, EN1 = NA, EN = NA))
       }
-    crit_val_res <- rbind (crit_val_res, crit_val_res[3, ] * int_n + 
-                                (1 - crit_val_res[3, ]) * fin_n)
-    crit_val_res <- rbind (crit_val_res, crit_val_res[4, ] * int_n + 
-                                (1 - crit_val_res[4, ]) * fin_n)
-    crit_val_res <- rbind (crit_val_res, colMeans(rbind(crit_val_res[7, ], crit_val_res[8, ])))
-    # Follow the power constraint
-    best_res <- crit_val_res[, which(crit_val_res[6, ] >= power)]
+      # Follow the power constraint
+    best_res <- crit_val_res[which(crit_val_res$power >= power), ]
+    best_res$PET <- rowMeans(rbind(best_res[3, ], best_res[4, ]))
 
+    best_res <- rbind(best_res, )
+    best_res <- rbind (best_res, best_res[3, ] * int_n + 
+                                (1 - best_res[3, ]) * fin_n)
+    best_res <- rbind (best_res, best_res[4, ] * int_n + 
+                                (1 - best_res[4, ]) * fin_n)
+    best_res <- rbind (best_res, colMeans(rbind(best_res[7, ], best_res[8, ])))
+    
     if (is.null(best_res) || dim(best_res)[2] == 0) {   
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, 
-                          alpha = 0, power = 0, EN0 = NA, EN1 = NA, EN = NA))
+                          alpha = 0, power = 0, PET = 0, EN0 = NA, EN1 = NA, EN = NA))
       } else if (dim(best_res)[2] > 1) { # not unique solution min E(N)
       best_res <- best_res[, which(best_res[9, ] == min(best_res[9, ]))]
     }
     best_res <- data.frame(t(best_res))
     colnames(best_res) <- c('m1', 'm2', 'PET0', 'PET1', 'alpha', 
-                            'power', 'EN0', 'EN1', 'EN')
+                            'power', 'PET', 'EN0', 'EN1', 'EN')
     if (dim(best_res)[1] > 1) {     # multiple solution, return the first one
        best_res <- best_res[1, ]
     }
@@ -610,6 +612,9 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
   if(method == 'Simple')
   {
     combinations <- expand.grid(m1 = m1_values, m2 = m2_values)
+    combinations$q1 <- -Inf
+    combinations$q2 <- -Inf
+    combinations$gamma <- 0
     combinations$PET0 <- sapply(1:nrow(combinations), function(i) {
                               cal_pet(rmst_h0_int, combinations$m1[i], -Inf)})
     combinations$PET1 <- sapply(1:nrow(combinations), function(i) {
