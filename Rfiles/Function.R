@@ -447,60 +447,62 @@ norm_2d <- function(m2, m1, mean, sigma, alpha)
     return (prob - alpha)
   }
 
-
-cal_proc <- function(lr_int, lr_fin, m1, m2) {
-                       sum((lr_int > m1) & (lr_fin > m2) )/ sim_size
-                      }
-cal_pet <- function(lr_int, m1){
-                      sum(lr_int <= m1) / sim_size
-                      }
-  ub_m1 <- quantile(z_stats_h1_int, 0.9)
-  lb_m1 <- quantile(z_stats_h0_int, 0.1)
-  ub_m2 <- quantile(z_stats_h1_fin, 0.9)
-  lb_m2 <- quantile(z_stats_h0_fin, 0.1)
-  m1_values <- seq(lb_m1, ub_m1, by = (ub_m1 - lb_m1) / search_times) 
-  m2_values <- seq(lb_m2, ub_m2, by = (ub_m2 - lb_m2) / search_times)
-  combinations <- expand.grid(m1 = m1_values, m2 = m2_values)
-  combinations$PET0 <- sapply(1:nrow(combinations), function(i) {
-                              cal_pet(z_stats_h0_int, combinations$m1[i])})
-  combinations$PET1 <- sapply(1:nrow(combinations), function(i) {
-                              cal_pet(z_stats_h1_int, combinations$m1[i]) }) 
-  combinations$alpha <- sapply(1:nrow(combinations), function(i) {
-                              cal_proc(z_stats_h0_int, z_stats_h0_fin, 
-                                    combinations$m1[i], combinations$m2[i]) })
-  combinations$power <- sapply(1:nrow(combinations), function(i) {
-                              cal_proc(z_stats_h1_int, z_stats_h1_fin, 
-                                    combinations$m1[i], combinations$m2[i]) })
-  if (is.null(power)) { # find the most powerful one
-      fil_combs <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha &
-                                combinations$alpha < alpha, ]
-      crit_val_res <- fil_combs[which.max(fil_combs$power), ]
-            }
-  else { 
-      crit_val_res <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-                                combinations$alpha < alpha & (combinations$power > power), ]
-            }
-
-  # m1_low <- quantile(z_stats_h0_int, 0.2) # Under H0, Z ~ N(0,1)
-  # m1_up <- max(z_stats_h0_int, 0.8) 
-  # crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
-  #                   .combine = 'rbind') %dopar% 
-  # {
-  #   m2 <- tryCatch({
-  #         uniroot(norm_2d, interval = c(0, 10), m1 = m1, mean = mean_h0,
-  #                sigma = sigma_h0, alpha = alpha)$root
-  #                }, error = function(e) {
-  #                  return(-Inf)
-  #               })
-  #   proc_h0 <- sum((z_stats_h0_int > m1) & (z_stats_h0_fin > m2))
-  #   proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
-  #   PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
-  #   PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-  #   if(abs(proc_h0/sim_size - alpha) < 0.05 * alpha
-  #     & proc_h0/sim_size <= alpha){
-  #     return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
-  #   }
-  # }
+# cal_proc <- function(lr_int, lr_fin, m1, m2) {
+#                        sum((lr_int > m1) & (lr_fin > m2))/ sim_size
+#                       }
+# cal_pet <- function(lr_int, m1){
+#                       sum(lr_int <= m1) / sim_size
+#                       }
+#   ub_m1 <- quantile(z_stats_h1_int, 0.7)
+#   lb_m1 <- quantile(z_stats_h0_int, 0.3)
+#   ub_m2 <- quantile(z_stats_h1_fin, 0.7)
+#   lb_m2 <- quantile(z_stats_h0_fin, 0.3)
+#   m1_values <- seq(lb_m1, ub_m1, by = (ub_m1 - lb_m1) / search_times) 
+#   m2_values <- seq(lb_m2, ub_m2, by = (ub_m2 - lb_m2) / search_times)
+#   combinations <- expand.grid(m1 = m1_values, m2 = m2_values)
+#   combinations$PET0 <- sapply(1:nrow(combinations), function(i) {
+#                               cal_pet(z_stats_h0_int, combinations$m1[i])})
+#   combinations$PET1 <- sapply(1:nrow(combinations), function(i) {
+#                               cal_pet(z_stats_h1_int, combinations$m1[i]) }) 
+#   combinations$alpha <- sapply(1:nrow(combinations), function(i) {
+#                               cal_proc(z_stats_h0_int, z_stats_h0_fin, 
+#                                     combinations$m1[i], combinations$m2[i]) })
+#   combinations$power <- sapply(1:nrow(combinations), function(i) {
+#                               cal_proc(z_stats_h1_int, z_stats_h1_fin, 
+#                                     combinations$m1[i], combinations$m2[i]) })
+#   if (is.null(power)) { # find the most powerful one
+#       fil_combs <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha &
+#                                 combinations$alpha < alpha, ]
+#       crit_val_res <- fil_combs[which.max(fil_combs$power), ]
+#             }
+#   else { 
+#       crit_val_res <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
+#                                 (combinations$alpha < alpha) & (combinations$power > power)&
+#                                 (abs(combinations$power - power) < 0.05 * power) , ]
+#             }
+  alpha0 <- alpha
+  power0 <- power
+  m1_low <- quantile(z_stats_h0_int, 0.2) # Under H0, Z ~ N(0,1)
+  m1_up <- quantile(z_stats_h0_int, 0.8) 
+  crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
+                    .combine = 'rbind') %dopar% 
+  {
+    # m2 <- tryCatch({
+    #       uniroot(norm_2d, interval = c(0, 100), m1 = m1, mean = mean_h0,
+    #              sigma = sigma_h0, alpha = alpha)$root
+    #              }, error = function(e) {
+    #                return(-Inf)
+    #             })
+    m2 <- uniroot(norm_2d, interval = c(0, 100), m1 = m1, mean = mean_h0,
+                 sigma = sigma_h0, alpha = alpha0)$root
+    proc_h0 <- sum((z_stats_h0_int > m1) & (z_stats_h0_fin > m2))
+    proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
+    PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
+    PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
+    if( proc_h0/sim_size <= alpha0){
+      return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
+    }
+  }
 
   if (is.null(crit_val_res) || dim(crit_val_res)[1] == 0) {   
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
@@ -523,7 +525,7 @@ cal_pet <- function(lr_int, m1){
 
   else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
   {
-    best_res <- crit_val_res[which(crit_val_res$power >= power), ]
+    best_res <- crit_val_res[which(crit_val_res$power >= power0), ]
     if (dim(best_res)[1] == 0){ #no valid result
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
                         PET = 0, EN0 = NA, EN1 = NA, EN = NA))

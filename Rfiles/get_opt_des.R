@@ -92,7 +92,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
             # corr(W1, W | H0)
             corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))         
             best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size, corr_h0 = corr_h0,
-                            search_times = 100, alpha = alpha, power = power, int_n = interim * r, fin_n = N)
+                            search_times = 150, alpha = alpha, power = power, int_n = interim * r, fin_n = N)
         }
         best_our$interim_n <- ceiling(interim * r)
         all_result <- rbind(all_result, best_our)
