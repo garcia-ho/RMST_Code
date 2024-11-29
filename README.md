@@ -81,8 +81,8 @@ $\tilde{N}$ is the sample size(2 arms) of interim period. $N$ is the final total
 
 ```math
 \begin{aligned}
-P(\hat{R}_{E1}(\tau_1)> q_1\ |\ \hat{D}_1(\tau_1) > m_1 ) &=  f(\tilde{N}) \\
-P(\hat{R}_{E2}(\tau_2)> q_2\ |\ \hat{D}_2(\tau_2) > m_2) &= f(N) \\
+Prob\ (\ \hat{R}_{E1}(\tau_1)> q_1\ |\ \hat{D}_1(\tau_1) > m_1 ) &=  f(\tilde{N}) \\
+Prob\ (\ \hat{R}_{E2}(\tau_2)> q_2\ |\ \hat{D}_2(\tau_2) > m_2) &= f(N) \\
 \lambda \in (0,1).\\ 
 \end{aligned}
 ```
@@ -110,14 +110,14 @@ The performances of three methods are compared with different Hazard Ratio(under
 </p>
 
 
-### 2. Under Early Difference Scenario
+### 2. Under Early or Late Difference Scenario
 The survival function of two groups are shown below: 
 <p align="center"> 
 <img src="figures/Comparison/Early_diff_sur.png" alt="Survival of Early Difference" width="420" height="300">
 </p>
 
 The comparison of three methods under different setting is shown below:  
-![Result Under Early Difference Scenario](figures/Comparison/Early_diff.png)  
+![Result Under Early Difference Scenario](figures/Comparison/early_late_diff_itrm.jpg)  
 
 The graph shows us that our method have higher power while preserving the type I error under different early difference settings. Higher PET0 and relatively acceptable sacrifice of PET1. 
 
