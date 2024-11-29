@@ -15,7 +15,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
 {
     N <- 2 * n #overall sample size of two groups
     r <- N / acc_time
-    int_factor <- seq(0.3, 0.7, by = int_step / N)  # Each time interim sample size increase by 6
+    int_factor <- seq(0.4, 0.7, by = int_step / N)  # Each time interim sample size increase by 6
     interim_list <- int_factor * acc_time
 
     data_C <- expo_gen_2stages(N = n * sim_size, acc_time = acc_time, lambda = lambda_H0, dist = 'exp', 
@@ -61,37 +61,45 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
         else if (method == 'logrank')   # search the min(E(N)) using log rank test
         {
             try_lr <- tryCatch({
-                    list(
-                lr_h0_int = log_rank_sim(data_C = data_C[, c(2, 3, 1), i], 
-                                      data_E = data_E_H0[, c(2, 3, 1), i], 
-                                      sim_size = sim_size, n = n, alpha = alpha, sided = 'greater'),
-                lr_h1_int = log_rank_sim(data_C = data_C[, c(2, 3, 1), i], 
-                                      data_E = data_E_H1[, c(2, 3, 1), i], 
-                                      sim_size = sim_size, n = n, alpha = alpha, sided = 'greater'),
-                lr_h0_fin = log_rank_sim(data_C = data_C[, c(4, 5, 1), i], 
-                                      data_E = data_E_H0[, c(4, 5, 1), i], 
-                                      sim_size = sim_size, n = n, alpha = alpha, sided = 'greater'),
-                lr_h1_fin = log_rank_sim(data_C = data_C[, c(4, 5, 1), i], 
-                                      data_E = data_E_H1[, c(4, 5, 1), i], 
-                                      sim_size = sim_size, n = n, alpha = alpha, sided = 'greater')
-            )}, error = function(e) {
-                return(NULL)
-            })
+                lr_h0_int <- log_rank_sim(data_C = data_C[, c(2, 3, 1), i], 
+                                   data_E = data_E_H0[, c(2, 3, 1), i], 
+                                   sim_size = sim_size, n = n, alpha = alpha, sided = 'greater')
+                lr_h1_int <- log_rank_sim(data_C = data_C[, c(2, 3, 1), i], 
+                                   data_E = data_E_H1[, c(2, 3, 1), i], 
+                                   sim_size = sim_size, n = n, alpha = alpha, sided = 'greater')
+                lr_h0_fin <- log_rank_sim(data_C = data_C[, c(4, 5, 1), i], 
+                                   data_E = data_E_H0[, c(4, 5, 1), i], 
+                                   sim_size = sim_size, n = n, alpha = alpha, sided = 'greater')
+                lr_h1_fin <- log_rank_sim(data_C = data_C[, c(4, 5, 1), i], 
+                                   data_E = data_E_H1[, c(4, 5, 1), i], 
+                                   sim_size = sim_size, n = n, alpha = alpha, sided = 'greater')
+        list(lr_h0_int = lr_h0_int, lr_h1_int = lr_h1_int, lr_h0_fin = lr_h0_fin, lr_h1_fin = lr_h1_fin)
+    }, error = function(e) {
+        return(NULL)
+    })
 
-            if (is.null(try_lr)) {
-                next 
-             }
+    if (is.null(try_lr)) {
+        next 
+    }
 
+        lr_h0_int <- try_lr$lr_h0_int
+        lr_h1_int <- try_lr$lr_h1_int
+        lr_h0_fin <- try_lr$lr_h0_fin
+        lr_h1_fin <- try_lr$lr_h1_fin
+
+        if (is.null(lr_h0_int) || is.null(lr_h1_int) || is.null(lr_h0_fin) || is.null(lr_h1_fin)) {
+            next
+        }
             # Get W/sigma
-            z_stats_h1_int <- lr_h1_int$z_stats
-            z_stats_h1_fin <- lr_h1_fin$z_stats
-            z_stats_h0_int <- lr_h0_int$z_stats
-            z_stats_h0_fin <- lr_h0_fin$z_stats
-            logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin) 
+        z_stats_h1_int <- lr_h1_int$z_stats
+        z_stats_h1_fin <- lr_h1_fin$z_stats
+        z_stats_h0_int <- lr_h0_int$z_stats
+        z_stats_h0_fin <- lr_h0_fin$z_stats
+        logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin) 
 
             # corr(W1, W | H0)
-            corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))         
-            best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size, corr_h0 = corr_h0,
+        corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))         
+        best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size, corr_h0 = corr_h0,
                             search_times = 150, alpha = alpha, power = power, int_n = interim * r, fin_n = N)
         }
         best_our$interim_n <- ceiling(interim * r)
@@ -111,7 +119,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
         }
     }
     else{
-        all_result <- all_result[which(all_result$EN == min(all_result$EN, na.rm = TRUE)), ]
+        all_result <- all_result[which(all_result$EN0 == min(all_result$EN0, na.rm = TRUE)), ]
         return(all_result[1, ])
         # return the result with minimal EN. only return the first row when multiple results
     }

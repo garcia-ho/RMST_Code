@@ -447,62 +447,55 @@ norm_2d <- function(m2, m1, mean, sigma, alpha)
     return (prob - alpha)
   }
 
-# cal_proc <- function(lr_int, lr_fin, m1, m2) {
-#                        sum((lr_int > m1) & (lr_fin > m2))/ sim_size
-#                       }
-# cal_pet <- function(lr_int, m1){
-#                       sum(lr_int <= m1) / sim_size
-#                       }
-#   ub_m1 <- quantile(z_stats_h1_int, 0.7)
-#   lb_m1 <- quantile(z_stats_h0_int, 0.3)
-#   ub_m2 <- quantile(z_stats_h1_fin, 0.7)
-#   lb_m2 <- quantile(z_stats_h0_fin, 0.3)
-#   m1_values <- seq(lb_m1, ub_m1, by = (ub_m1 - lb_m1) / search_times) 
-#   m2_values <- seq(lb_m2, ub_m2, by = (ub_m2 - lb_m2) / search_times)
-#   combinations <- expand.grid(m1 = m1_values, m2 = m2_values)
-#   combinations$PET0 <- sapply(1:nrow(combinations), function(i) {
-#                               cal_pet(z_stats_h0_int, combinations$m1[i])})
-#   combinations$PET1 <- sapply(1:nrow(combinations), function(i) {
-#                               cal_pet(z_stats_h1_int, combinations$m1[i]) }) 
-#   combinations$alpha <- sapply(1:nrow(combinations), function(i) {
-#                               cal_proc(z_stats_h0_int, z_stats_h0_fin, 
-#                                     combinations$m1[i], combinations$m2[i]) })
-#   combinations$power <- sapply(1:nrow(combinations), function(i) {
-#                               cal_proc(z_stats_h1_int, z_stats_h1_fin, 
-#                                     combinations$m1[i], combinations$m2[i]) })
-#   if (is.null(power)) { # find the most powerful one
-#       fil_combs <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha &
-#                                 combinations$alpha < alpha, ]
-#       crit_val_res <- fil_combs[which.max(fil_combs$power), ]
-#             }
-#   else { 
-#       crit_val_res <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-#                                 (combinations$alpha < alpha) & (combinations$power > power)&
-#                                 (abs(combinations$power - power) < 0.05 * power) , ]
-#             }
-  alpha0 <- alpha
-  power0 <- power
-  m1_low <- quantile(z_stats_h0_int, 0.2) # Under H0, Z ~ N(0,1)
-  m1_up <- quantile(z_stats_h0_int, 0.8) 
-  crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
-                    .combine = 'rbind') %dopar% 
-  {
-    # m2 <- tryCatch({
-    #       uniroot(norm_2d, interval = c(0, 100), m1 = m1, mean = mean_h0,
-    #              sigma = sigma_h0, alpha = alpha)$root
-    #              }, error = function(e) {
-    #                return(-Inf)
-    #             })
-    m2 <- uniroot(norm_2d, interval = c(0, 100), m1 = m1, mean = mean_h0,
-                 sigma = sigma_h0, alpha = alpha0)$root
-    proc_h0 <- sum((z_stats_h0_int > m1) & (z_stats_h0_fin > m2))
-    proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
-    PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
-    PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
-    if( proc_h0/sim_size <= alpha0){
-      return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
-    }
-  }
+cal_proc <- function(lr_int, lr_fin, m1, m2) {
+                       sum((lr_int > m1) & (lr_fin > m2))/ sim_size
+                      }
+cal_pet <- function(lr_int, m1){
+                      sum(lr_int <= m1) / sim_size
+                      }
+  ub_m1 <- quantile(z_stats_h1_int, 0.7)
+  lb_m1 <- quantile(z_stats_h0_int, 0.3)
+  ub_m2 <- quantile(z_stats_h1_fin, 0.7)
+  lb_m2 <- quantile(z_stats_h0_fin, 0.3)
+  m1_values <- seq(lb_m1, ub_m1, by = (ub_m1 - lb_m1) / search_times) 
+  m2_values <- seq(lb_m2, ub_m2, by = (ub_m2 - lb_m2) / search_times)
+  combinations <- expand.grid(m1 = m1_values, m2 = m2_values)
+  combinations$PET0 <- sapply(1:nrow(combinations), function(i) {
+                              cal_pet(z_stats_h0_int, combinations$m1[i])})
+  combinations$PET1 <- sapply(1:nrow(combinations), function(i) {
+                              cal_pet(z_stats_h1_int, combinations$m1[i]) }) 
+  combinations$alpha <- sapply(1:nrow(combinations), function(i) {
+                              cal_proc(z_stats_h0_int, z_stats_h0_fin, 
+                                    combinations$m1[i], combinations$m2[i]) })
+  combinations$power <- sapply(1:nrow(combinations), function(i) {
+                              cal_proc(z_stats_h1_int, z_stats_h1_fin, 
+                                    combinations$m1[i], combinations$m2[i]) })
+  if (is.null(power)) { # find the most powerful one
+      fil_combs <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha &
+                                combinations$alpha < alpha, ]
+      crit_val_res <- fil_combs[which.max(fil_combs$power), ]
+            }
+  else { 
+      crit_val_res <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
+                                (combinations$alpha < alpha) & (combinations$power > power)&
+                                (abs(combinations$power - power) < 0.05 * power) , ]
+            }
+
+  # m1_low <- quantile(z_stats_h0_int, 0.2) # Under H0, Z ~ N(0,1)
+  # m1_up <- quantile(z_stats_h0_int, 0.8) 
+  # crit_val_res <- foreach(m1 = seq(from = m1_low, to = m1_up, by = (m1_up - m1_low) / search_times), 
+  #                   .combine = 'rbind') %dopar% 
+  # {
+  #   m2 <- uniroot(norm_2d, interval = c(0, 100), m1 = m1, mean = mean_h0,
+  #                sigma = sigma_h0, alpha = alpha)$root
+  #   proc_h0 <- sum((z_stats_h0_int > m1) & (z_stats_h0_fin > m2))
+  #   proc_h1 <- sum((z_stats_h1_int > m1) & (z_stats_h1_fin  > m2))
+  #   PET0 <- sum((z_stats_h0_int <= m1)) / sim_size
+  #   PET1 <- sum((z_stats_h1_int <= m1)) / sim_size
+  #   if( proc_h0/sim_size <= alpha){
+  #     return(c(m1, m2, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
+  #   }
+  # }
 
   if (is.null(crit_val_res) || dim(crit_val_res)[1] == 0) {   
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
@@ -525,7 +518,7 @@ norm_2d <- function(m2, m1, mean, sigma, alpha)
 
   else  # When power is given, find the min(E(N)) design under (alpha, power) constraint
   {
-    best_res <- crit_val_res[which(crit_val_res$power >= power0), ]
+    best_res <- crit_val_res[which(crit_val_res$power >= power), ]
     if (dim(best_res)[1] == 0){ #no valid result
       return(data.frame(m1 = 0, m2 = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
                         PET = 0, EN0 = NA, EN1 = NA, EN = NA))
@@ -570,11 +563,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h1_fin <- rmst_data[c(7,8) , ]
 
 #__________________________________ New grid searching_____________________________
-  alpha <- alpha
-  power0 <- power
 
-  cal_q <- function(m, tar_prob, mu, sigma) 
-
+  cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
       {
         mu_D <- mu[1]
         mu_E <- mu[2]
@@ -648,7 +638,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             }
     else { 
       crit_val_res <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-                                combinations$alpha < alpha & (combinations$power > power0), ]
+                                combinations$alpha < alpha & (combinations$power > power), ]
             }
   }
 
@@ -690,10 +680,9 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
                                         combinations$alpha < alpha, ]
               best_gamma <- fil_combs[which.max(fil_combs$power), ]
             }
-  
         else { 
               best_gamma <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-                                        combinations$alpha < alpha & (combinations$power > power0), ]
+                                        combinations$alpha < alpha & (combinations$power > power), ]
             }
         best_gamma
       }   
@@ -709,8 +698,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
         else {
             best_res <- crit_val_res[ which(crit_val_res[, 'power'] == max(crit_val_res[, 'power'])), ]
             return(data.frame(best_res))
-          }
-        
+          } 
       }
 
     else # find the min E(N)|H0 critical values
@@ -725,146 +713,12 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
           crit_val_res$EN0 <- crit_val_res$PET0  * int_n + (1 - crit_val_res$PET0 ) * fin_n
           crit_val_res$EN1 <- crit_val_res$PET1  * int_n + (1 - crit_val_res$PET1 ) * fin_n
           crit_val_res$EN <- (crit_val_res$EN0 + crit_val_res$EN1) / 2
-          #best_res <- crit_val_res[ which(crit_val_res[, 'EN'] == min(crit_val_res[, 'EN'])), ] 
           return(crit_val_res)
       }
   }
 
 
 
-
-#__________________________________ Original grid searching_____________________________
-      # Function to minimize solve t in P(E-C > m & E > t) = tar_prob given m
-
-      # norm_2d <- function(t, m, mean, sigma, tar_prob) 
-      #   {
-      #     prob <- pmvnorm(lower = c(m, t), 
-      #                     upper = rep(Inf, 2), 
-      #                     mean = mean, 
-      #                     sigma = sigma)
-      #     return (prob - tar_prob)
-      #   }
-
-      # crit_val_res <- foreach(lambda = seq(0.9, 0.999, 0.001), .combine = 'cbind') %dopar%
-      # {   
-      #   best_gamma <- c()
-      #   best_power <- 0
-      #   for (gamma in seq(0.001, 0.5, by = 0.005))
-      #     {
-      #       p1_tar <- exp(-gamma * (int_n / fin_n))             # P(E1-C1 > m1)
-      #       p2_tar <- lambda * exp(-gamma * (int_n / fin_n))    # P(E1-C1 > m1, E1 > t1)
-      #       p3_tar <- exp(-gamma * ( fin_n / fin_n))            # P(E2-C2 > m2)
-      #       p4_tar <- lambda * exp(-gamma * (fin_n / fin_n))    # P(E2-C2 > m2, E2 > t2)
-
-      #       # First equation P(E1-C1 > m1) = p1_tar
-      #       m1 <- qnorm(1 - p1_tar, mean = mu1[1], sd = sqrt(sigma1[1, 1]))
-      #       # Third equation
-      #       m2 <- qnorm(1 - p3_tar, mean = mu2[1], sd = sqrt(sigma2[1, 1])) 
-
-      #       if (method == 'Simple')
-      #       {
-      #         t1 <- 0
-      #         t2 <- 0
-      #       }
-
-      #       else if (method == 'Complex') 
-      #       {
-      #         # Second equation P(E1-C1 > m1 & E1 > t1) = p2_tar
-      #         t1 <- uniroot(norm_2d, interval = c(0, 20), m = m1, 
-      #                     mean = mu1, sigma = sigma1, tar_prob = p2_tar)$root
-      #         # Forth equation
-      #         t2 <- uniroot(norm_2d, interval = c(0, 20), m = m2, 
-      #                   mean = mu2, sigma = sigma2, tar_prob = p4_tar)$root
-      #       }
-
-      #       proc_h0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] > m1) & (rmst_h0_int[2, ] > t1) &
-      #                 (rmst_h0_fin[2, ] - rmst_h0_fin[1, ] > m2) & (rmst_h0_fin[2, ] > t2))
-      #       proc_h1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] > m1) & (rmst_h1_int[2, ] > t1) &
-      #                 (rmst_h1_fin[2, ] - rmst_h1_fin[1, ] > m2) & (rmst_h1_fin[2, ] > t2))
-
-      #       if (is.null(power))
-      #       {
-      #         if ( abs(proc_h0 / sim_size - alpha) <= 0.05 * alpha 
-      #           & proc_h1 / sim_size > best_power)  #control alpha, find the most powerful set
-      #         {
-      #           best_power <- proc_h1 / sim_size
-      #           best_gamma <- c(m1, t1, m2, t2, lambda, gamma, proc_h0/sim_size, proc_h1/sim_size)
-      #         }
-      #       }
-            
-      #       # If the power is given, we return the result with minimal E(N)
-      #       else
-      #       {
-      #         if ( abs(proc_h0 / sim_size - alpha) <= 0.05 * alpha
-      #            & abs(proc_h1 / sim_size - power) <= 0.05 * power)  
-      #         {
-      #           PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < m1) | 
-      #                 (rmst_h0_int[2, ] < t1)) / sim_size
-      #           PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < m1) | 
-      #                 (rmst_h1_int[2, ] < t1)) / sim_size
-      #           best_gamma <- cbind(best_gamma, c(m1, t1, m2, t2, 
-      #                         lambda, gamma, PET0, PET1, proc_h0/sim_size, proc_h1/sim_size))
-      #         }
-      #       }
-      #     }
-      #   best_gamma 
-      #   }
-
-      # if (is.null(power))  # find the most powerful critical values
-      # {
-      #   if (is.null(crit_val_res) ) 
-      #     {   # Return NULL when something goes wrong
-      #       return(data.frame(m1 = 0, t1 = 0, m2 = 0, t2 = 0, lambda = 0,
-      #                   gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0))
-      #     }
-      #   best_res <- crit_val_res[, which(crit_val_res[8, ] == max(crit_val_res[8, ]))]
-      #   PET0 <- sum((rmst_h0_int[2, ] - rmst_h0_int[1, ] < best_res[1]) | 
-      #             (rmst_h0_int[2, ] < best_res[2])) / sim_size
-      #   PET1 <- sum((rmst_h1_int[2, ] - rmst_h1_int[1, ] < best_res[1]) | 
-      #             (rmst_h1_int[2, ] < best_res[2])) / sim_size
-
-      #   return(data.frame(m1 = best_res[1], t1 = best_res[2], m2 = best_res[3],
-      #                   t2 = best_res[4], lambda = best_res[5], gamma = best_res[6],
-      #                   PET0 = PET0, PET1 = PET1, alpha = best_res[7], power = best_res[8]))
-      # }
-
-      # else # find the min E(N)|H0 critical values
-      # {   
-      #     if (is.null(crit_val_res)) 
-      #     {   # Return NULL when something goes wrong
-      #       return(data.frame(m1 = 0, t1 = 0, m2 = 0, t2 = 0, lambda = 0,
-      #                   gamma = 0, PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
-      #                   EN0 = NA, EN1 = NA, EN = NA))
-      #     }
-      #     # calculate E(N)
-      #     PET <- (crit_val_res[7, ] + crit_val_res[8, ]) / 2
-      #     crit_val_res <- rbind (crit_val_res, crit_val_res[7, ]  * int_n + 
-      #                           (1 - crit_val_res[7, ] ) * fin_n)
-      #     crit_val_res <- rbind (crit_val_res, crit_val_res[8, ] * int_n + 
-      #                           (1 - crit_val_res[8, ]) * fin_n)
-      #     crit_val_res <- rbind (crit_val_res, PET * int_n + (1-PET) * fin_n)
-
-      #     if (find_opt == TRUE)  # in optimal design searching, return all results
-      #     {
-      #       best_res <- data.frame(t(crit_val_res))
-      #     }
-
-      #     else  # for a specific interim n and total N
-      #     { # min EN
-      #       best_res <- crit_val_res[, which(crit_val_res[13, ] == min(crit_val_res[13, ]))] 
-      #       best_res <- data.frame(t(best_res))
-      #     }
-      #     colnames(best_res) <- c('m1', 't1', 'm2', 't2', 'lambda', 'gamma',
-      #                             'PET0', 'PET1', 'alpha', 'power', 'EN0', 'EN1', 'EN')
-          
-      #     if (method == 'Simple') {  # lambda is not working for simple RMST
-      #       best_res <- best_res[1, ]
-      #     }
-      #     return(best_res)
-      # }
-  #}
-
- 
 
 
 
@@ -896,7 +750,9 @@ compare_line_plot <- function(data, var_name)
     plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, 
         color = variable, linetype = linetype_group)) +
     geom_point(size = 3) +
-    geom_line(linewidth = 1) +
+    geom_smooth(method = "loess", formula = y ~ x, se = FALSE, 
+                aes(group = interaction(variable, linetype_group)), 
+                linewidth = 1) + 
     #geom_vline(xintercept = 0.7, color = "red", linetype = "dashed", size = 1) +
     scale_linetype_manual(values = c("Alpha" = "solid", "Power" = "dotted")) +
     labs( linetype = "Line Type", color = "Variable",
@@ -925,7 +781,9 @@ compare_line_plot <- function(data, var_name)
     plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, 
         color = variable, linetype = linetype_group)) +
         geom_point(size = 3) +
-        geom_line(linewidth = 1) +
+        geom_smooth(method = "loess", formula = y ~ x, se = FALSE, 
+                aes(group = interaction(variable, linetype_group)), 
+                linewidth = 1) + 
         #geom_vline(xintercept = 0.67, color = "red", linetype = "dashed", size = 1) +
         scale_linetype_manual(values = c("PET0" = "solid", "PET1" = "dotted")) +
         labs( linetype = "Line Type", color = "Variable",
