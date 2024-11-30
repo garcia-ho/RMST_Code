@@ -438,19 +438,19 @@ find_m_logrank <- function(logrank_data, corr_h0, search_times, int_n = NULL,
   mean_h0 <- c(0, 0)
 
   #Function to  solve m2 in P( W1/sigma1 > m1 & W/sigma > m2 | H0) = alpha given m1
-norm_2d <- function(m2, m1, mean, sigma, alpha) 
-  {
-    prob <- pmvnorm(lower = c(m1, m2), 
+  norm_2d <- function(m2, m1, mean, sigma, alpha) 
+    {
+      prob <- pmvnorm(lower = c(m1, m2), 
                     upper = rep(Inf, 2), 
                     mean = mean, 
                     sigma = sigma)
-    return (prob - alpha)
-  }
+      return (prob - alpha)
+    }
 
-cal_proc <- function(lr_int, lr_fin, m1, m2) {
+  cal_proc <- function(lr_int, lr_fin, m1, m2) {
                        sum((lr_int > m1) & (lr_fin > m2))/ sim_size
                       }
-cal_pet <- function(lr_int, m1){
+  cal_pet <- function(lr_int, m1){
                       sum(lr_int <= m1) / sim_size
                       }
   ub_m1 <- quantile(z_stats_h1_int, 0.7)

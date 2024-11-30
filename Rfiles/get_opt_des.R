@@ -11,7 +11,7 @@
 #_________________________________________________________________
 
 get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambda_H0, 
-                        lambda_H1, H1_type, HR1, HR2, change_time, alpha, power = NULL) 
+                        lambda_H1, H1_type, HR1, HR2, change_time,tau = NULL, alpha, power = NULL) 
 {
     N <- 2 * n #overall sample size of two groups
     r <- N / acc_time
@@ -33,6 +33,14 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
     }
 
     all_result <- data.frame()
+
+    if (is.null(tau)){ # the preset cut off tau for final stage
+        tau_f <- acc_time + cen_time
+    }
+    else{
+        tau_f <- tau
+    }
+
     for (i in 1 : length(interim_list))
     {  
         interim <- interim_list[i]  # interim is the length of interim period
@@ -43,11 +51,9 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
             rmst_h1_int <- RMST_sim_cal(n = n,data_E = data_E_H1[ , c(2,3,1), i], 
                                 data_C = data_C[ , c(2,3,1), i],tau = interim, sim_size = sim_size)
             rmst_h0_fin <- RMST_sim_cal(n = n,data_E = data_E_H0[ , c(4,5,1), i], 
-                                data_C = data_C[ , c(4,5,1), i],
-                                tau = acc_time + cen_time, sim_size = sim_size)
+                                data_C = data_C[ , c(4,5,1), i], tau = tau_f, sim_size = sim_size)
             rmst_h1_fin <- RMST_sim_cal(n = n,data_E = data_E_H1[ , c(4,5,1), i], 
-                                data_C = data_C[ , c(4,5,1), i],
-                                tau = acc_time + cen_time, sim_size = sim_size)
+                                data_C = data_C[ , c(4,5,1), i], tau = tau_f, sim_size = sim_size)
             rmst_data <- rbind(rmst_h0_int, rmst_h1_int, rmst_h0_fin, rmst_h1_fin)
 
             mu_cov_h0 <- mu_cov_mc(rmst_int = rmst_h0_int, rmst_fin = rmst_h0_fin, sim_size = sim_size)
