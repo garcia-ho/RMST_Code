@@ -645,7 +645,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
   # D1>m1, E1>q1, D2>m2, E2>q2
   if (method == 'Complex') 
   {
-    crit_val_res <- foreach(gamma = seq(0, 0.5, by = 0.02), .combine = 'rbind') %dopar%
+    crit_val_res <- foreach(gamma = seq(0, 0.1, by = 0.005), .combine = 'rbind') %dopar%
       {
         tar_prob_int <- exp(-gamma * (int_n / fin_n)) 
         tar_prob_fin <- exp(-gamma * (fin_n / fin_n)) 
