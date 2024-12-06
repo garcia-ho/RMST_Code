@@ -87,7 +87,6 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
     if (is.null(try_lr)) {
         next 
     }
-
         lr_h0_int <- try_lr$lr_h0_int
         lr_h1_int <- try_lr$lr_h1_int
         lr_h0_fin <- try_lr$lr_h0_fin
@@ -96,14 +95,14 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
         if (is.null(lr_h0_int) || is.null(lr_h1_int) || is.null(lr_h0_fin) || is.null(lr_h1_fin)) {
             next
         }
-            # Get W/sigma
+        # Get W/sigma
         z_stats_h1_int <- lr_h1_int$z_stats
         z_stats_h1_fin <- lr_h1_fin$z_stats
         z_stats_h0_int <- lr_h0_int$z_stats
         z_stats_h0_fin <- lr_h0_fin$z_stats
         logrank_data <- rbind(z_stats_h0_int, z_stats_h1_int, z_stats_h0_fin, z_stats_h1_fin) 
 
-            # corr(W1, W | H0)
+        # corr(W1, W | H0)
         corr_h0 <- sqrt(mean(lr_h0_int$var_w) / mean(lr_h0_fin$var_w))         
         best_our <- find_m_logrank(logrank_data = logrank_data, sim_size = sim_size, corr_h0 = corr_h0,
                             search_times = 150, alpha = alpha, power = power, int_n = interim * r, fin_n = N)
