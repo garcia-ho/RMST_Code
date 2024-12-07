@@ -8,6 +8,7 @@
 #                        e.g int_step = 4 means increasing int_n by 4(2 for each group) each time
 # Parameter 'n': To maintaining consistency the input n should be the overall sample size of each group.
 # Parameter 'logrank': If logrank = TRUE, search for the optimal n for log_rank test
+# when power = NULL, return the most powerful result. Otherwise return Optimal design minimizing EN0
 #_________________________________________________________________
 
 get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambda_H0, 
@@ -122,6 +123,10 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
                         PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
                         PET = 0, EN0 = NA, EN1 = NA, EN = NA, interim_n = NA))
         }
+    }
+    if (is.null(power)){  #return the most powerful result
+        all_result <- all_result[which(all_result$power == max(all_result$power, na.rm = TRUE)), ]
+        return(all_result[1, ])
     }
     else{
         all_result <- all_result[which(all_result$EN0 == min(all_result$EN0, na.rm = TRUE)), ]
