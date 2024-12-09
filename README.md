@@ -124,8 +124,11 @@ The graph shows us that our method have higher power while preserving the type I
 
 The dotted lines are exmaple decision boundaries and shaded area is the critical region of a most powerful design . The volumes of the green and orange patterns within the shaded regions represent 
 ```math
-P(\hat{D}_i > m_i\ \cap\ \hat{R}_{Ei}> q_i\ |\ H_1)\\
-P(\hat{D}_i > m_i \cap \hat{R}_{Ei} > q_i\ |\ H_0)\\
+\begin{aligned}
+Prob\ (\ \hat{R}_{Ei}> q_i\ |\ \hat{D}_i > m_i &\mid H_1 ) \\
+Prob\ (\ \hat{R}_{Ei}> q_i\ |\ \hat{D}_i > m_i &\mid H_0) \\
+\lambda \in (0,1).\\ 
+\end{aligned}
 ```
 , which is corresponding to power and type I error respectively. It is clear that Sculpted RMST with two decision boundaries is more flexible than Simple RMST. 
 
