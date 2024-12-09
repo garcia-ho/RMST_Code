@@ -102,12 +102,7 @@ Then we search $\gamma$ within a certain range, say (-1,1) . Each $\gamma$ deter
 ## Result
 ### Two-stage Optimal Design Minimizing $\overline{EN}$ 
 ### 1. Under Proportional Hazard Scenario  
-We used $\lambda_{E}/\lambda_{C}= 0.67$ as base setting. The Type I error, Power, Probability of Early Termination under H0 and H1 are shown in the graph. We apply constant accrual rate $r = 90$(patients per year) with a fixed overall sample size N = 200 (100 per arm) . The longer the interim period, the larger the interim sample size n.  
-The performances of three methods are compared with different Hazard Ratio(under $H_1$) and different interim period. Our methods demonstrateed competitive performance compared to log-rank test and simple RMST test without extra rejection restriction.
-
-<p align="center"> 
-<img src="figures/Comparison/PH.png" alt="Result Under PH" width="900" height="600">
-</p>
+The result is shown in table 1 in paper
 
 
 ### 2. Under Early or Late Difference Scenario
@@ -127,17 +122,14 @@ The graph shows us that our method have higher power while preserving the type I
 
 ![The bivariate normal projection](figures/2-d-normal-projection.jpg)  
 
-The dotted lines are exmaple decision boundaries and shaded area is the critical region of a most powerful design .
-The difference in final stage is more significant. 
+The dotted lines are exmaple decision boundaries and shaded area is the critical region of a most powerful design . The volumes of the green patterns within the shaded regions represent $P(\hat{D}_i > m_i \cap \hat{R}_{Ei} > q_i\ |\ H_1)$, while the volumes of the orange patterns within the shaded regions represent $P(\hat{D}_i > m_i \cap \hat{R}_{Ei} > q_i\ |\ H_0)$, corresponding to power and type I error respectively. It is clear that Sculpted RMST with two decision boundaries is more flexible than Simple RMST. 
 
 ****
 ### Visualization of Sculpted Rejection Region 
 
 ![The sculpted critical region](figures/rejection_plot.jpg)  
 
-The data points in overall rejection region of $H_1$ in 10000 simulated trials. Each blue or orange dot in subplot A representing a pair of $(R_{E1}, R_{C1})$, which is one simulated trial in interim stage, has a corresponding dot with the same color in subplot B indicating the final stage of the same trial. A pair of corresponding dots that both fall in shaded region will be dyed green. Lines are most powerful decision boundaries of Simple and Sculpted RMST in two stages.  
-185 blue dots and 99 orange dots move out of the shaded region from interim to final, which is the main source of difference in overall type one error. More precisely, there are more simulated trials with small experimental RMST in final stage $R_{E2}$ fail to reject $H_1$ due to the $R_{E2} > 0.8983$ condition in Sculpted RMST (blue dots to the left of shaded area) than that with low final RMST difference $D_2$ (orange dots below shaded area). These additional dots moved outside of the sculpted region compared to Simple RMST represent the saving type I error.   
-Move on to the discussion of parameters $(\gamma, \lambda)$ in grid search procedure. $\gamma$ influences the relative position of the orange lines in subplot A compared to those in subplot B. Meanwhile, $\lambda$ governs the relative position of the vertical and horizontal orange lines within each subplot. 
+The data points in overall rejection region of $H_1$ in 10000 simulated trials. Each dot in subplot A representing a pair of $(\hat{R}_{E1},\hat{R}_{C1})$, which is one simulated trial in interim stage, has a corresponding dot with the same color in subplot B indicating the final stage of the same trial. The shaded regions are the critical regions interaction of simple and Sculpted RMST. Lines are most powerful decision boundaries of two methods in two stages. 1008 orange dots move out of the shaded region from interim to final, which is the main source of additional power of Sculpted RMST compared with Simple RMST. More precisely, there are more simulated trials with small $\hat{D}_2$ but large $\hat{R}_{E2}$ at final stage fail to reject $H_0$ due to the stringent boundary of $\hat{D}_2$ in Simple RMST(horizontal dotted line).
 
 
 
