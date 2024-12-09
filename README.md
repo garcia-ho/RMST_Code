@@ -125,9 +125,8 @@ The graph shows us that our method have higher power while preserving the type I
 The dotted lines are exmaple decision boundaries and shaded area is the critical region of a most powerful design . The volumes of the green and orange patterns within the shaded regions represent 
 ```math
 \begin{aligned}
-Prob\ (\ \hat{R}_{Ei}> q_i\ |\ \hat{D}_i > m_i &\mid H_1 ) \\
-Prob\ (\ \hat{R}_{Ei}> q_i\ |\ \hat{D}_i > m_i &\mid H_0) \\
-\lambda \in (0,1).\\ 
+Prob\ (\hat{D}_i > m_i \cap \hat{R}_{Ei}> q_i &\mid H_1 ) \\
+Prob\ (\hat{D}_i > m_i \cap \hat{R}_{Ei}> q_i &\mid H_0) \\
 \end{aligned}
 ```
 , which is corresponding to power and type I error respectively. It is clear that Sculpted RMST with two decision boundaries is more flexible than Simple RMST. 
@@ -137,7 +136,7 @@ Prob\ (\ \hat{R}_{Ei}> q_i\ |\ \hat{D}_i > m_i &\mid H_0) \\
 
 ![The sculpted critical region](figures/rejection_plot.jpg)  
 
-The data points in overall rejection region of $H_1$ in 10000 simulated trials. Each dot in subplot A representing a pair of $(\hat{R}_{E1},\hat{R}_{C1})$, which is one simulated trial in interim stage, has a corresponding dot with the same color in subplot B indicating the final stage of the same trial. The shaded regions are the critical regions interaction of simple and Sculpted RMST. Lines are most powerful decision boundaries of two methods in two stages. 1008 orange dots move out of the shaded region from interim to final, which is the main source of additional power of Sculpted RMST compared with Simple RMST. More precisely, there are more simulated trials with small $\hat{D}_2$ but large $\hat{R}_{E2}$ at final stage fail to reject $H_0$ due to the stringent boundary of $\hat{D}_2$ in Simple RMST(horizontal dotted line).
+The data points in overall rejection region of $H_1$ in 10000 simulated trials. Each dot in subplot A representing a pair of $({R}_{E1},R_{C1})$, which is one simulated trial in interim stage, has a corresponding dot with the same color in subplot B indicating the final stage of the same trial. The shaded regions are the critical regions interaction of simple and Sculpted RMST. Lines are most powerful decision boundaries of two methods in two stages. 1008 orange dots move out of the shaded region from interim to final, which is the main source of additional power of Sculpted RMST compared with Simple RMST. More precisely, there are more simulated trials with small $D_2$ but large $R_{E2}$ at final stage fail to reject $H_0$ due to the stringent boundary of $D_2$ in Simple RMST(horizontal dotted line).
 
 
 
