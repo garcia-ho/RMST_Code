@@ -3,7 +3,7 @@ This is the storage of the start up project.
 Hope I could publish a paper based on this for my Ph.D. application.  
 
 ## Flow Chart of Sculpted RMST design
-![Flow chart](figures/Flow chart.jpg) 
+![Flow chart](figures/Flow_chart.jpg) 
 
 ## Compare 3 methods:
 - 2 stages log rank test design (Jung 2017)   
