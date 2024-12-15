@@ -548,7 +548,7 @@ find_m_logrank <- function(logrank_data, corr_h0, search_times, int_n = NULL,
 # _______________ If power is given, it will retern critical value with min E(N)_________________
 
 adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n, 
-                        sim_size, method, alpha, power = NULL, find_opt = NULL) 
+                        sim_size, method, alpha, power = NULL) 
   {
       # Interim
       mu1 <- mu_cov_h1$mu[c(1,2)]
@@ -561,8 +561,6 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h1_int <- rmst_data[c(3,4) , ]
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
-
-#__________________________________ New grid searching_____________________________
 
   cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
       {
