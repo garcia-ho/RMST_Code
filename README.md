@@ -2,6 +2,7 @@
 This is the storage of the start up project.  
 Hope I could publish a paper based on this for my Ph.D. application.  
 
+The corrsponding R package 'ScuRMST' can be found at [ScuRMST](https://garcia-ho.github.io/ScuRMST/)
 ## Flow Chart of Sculpted RMST design
 ![Flow chart](figures/Flow_chart.jpg) 
 
