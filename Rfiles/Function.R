@@ -739,6 +739,7 @@ compare_line_plot <- function(data, var_name)
     a_power_delta <- data.frame(data[, c(1,2,3,4,5,6,7)])
     colnames(a_power_delta) <- c(var_name,'LR_alpha','SimRMST_alpha','ScuRMST_alpha',
                           'LR_power', 'SimRMST_power','ScuRMST_power')
+
     a_power_long <- a_power_delta %>%
         pivot_longer(cols = -!!sym(var_name), names_to = "variable", values_to = "value")%>%
         mutate(linetype_group = ifelse(variable %in% 
@@ -747,18 +748,16 @@ compare_line_plot <- function(data, var_name)
 
     plot1 <- ggplot(a_power_long, aes(x = !!sym(var_name), y = value, 
         color = variable, linetype = linetype_group)) +
-    geom_point(size = 3) +
-    geom_smooth(method = "loess", formula = y ~ x, se = FALSE, 
-                aes(group = interaction(variable, linetype_group)), 
-                linewidth = 1) + 
+    geom_point(size = 3, position = position_jitter(width = 0.1)) +  # Add jitter
+    geom_line(aes(group = interaction(variable, linetype_group)), 
+              linewidth = 1, alpha = 0.5) + 
     #geom_vline(xintercept = 0.7, color = "red", linetype = "dashed", size = 1) +
-    scale_linetype_manual(values = c("Alpha" = "solid", "Power" = "dotted")) +
-    labs( linetype = "Line Type", color = "Variable",
-          title = "Line Plot with Different Line Types") +
+    scale_linetype_manual(values = c("Alpha" = "dotted", "Power" = "solid")) +
+    labs( linetype = "Line Type", color = "Variable") +
     scale_y_continuous(breaks = c(0, 0.05, 0.25, 0.5, 0.75, 0.95, 1), limits = c(0, 1)) +
     scale_color_manual(values = color_palette) +
     labs(x = var_name, y = "Value", color = "Variable",
-      title = 'Type I error and Power') +
+      title = 'Type I error(alpha) and Power') +
     theme_minimal(base_size = 18) + 
     theme(plot.title = element_text(hjust = 0.5),
           plot.background = element_rect(fill = "white", color = NA),
@@ -766,7 +765,7 @@ compare_line_plot <- function(data, var_name)
     guides(linetype = guide_legend(override.aes = list(color = "black")),
         color = guide_legend(override.aes = list(linetype = "solid")))
 
-#_________next plot_________
+# #_________next plot_________
     pet_delta <- data.frame(data[, c(1,8,9,10,11,12,13)])
     colnames(pet_delta) <- c(var_name,'LR_PET0', 'SimRMST_PET0', 'ScuRMST_PET0',
                       'LR_PET1', 'SimRMST_PET1', 'ScuRMST_PET1')
@@ -779,14 +778,11 @@ compare_line_plot <- function(data, var_name)
     plot2 <- ggplot(pet_long, aes(x = !!sym(var_name), y = value, 
         color = variable, linetype = linetype_group)) +
         geom_point(size = 3) +
-        geom_smooth(method = "loess", formula = y ~ x, se = FALSE, 
-                aes(group = interaction(variable, linetype_group)), 
-                linewidth = 1) + 
+        geom_line(aes(group = interaction(variable, linetype_group)), 
+          linewidth = 1) +
         #geom_vline(xintercept = 0.67, color = "red", linetype = "dashed", size = 1) +
         scale_linetype_manual(values = c("PET0" = "solid", "PET1" = "dotted")) +
-        labs( linetype = "Line Type", color = "Variable",
-          title = "Line Plot with Different Line Types") +
-
+        labs( linetype = "Line Type", color = "Variable") +
         scale_y_continuous(limits = c(0, 1)) +
         scale_color_manual(values = color_palette) +
         labs(x = var_name, y = "Value", color = "Variable",
@@ -799,5 +795,6 @@ compare_line_plot <- function(data, var_name)
               color = guide_legend(override.aes = list(linetype = "solid")))
 
     plot_grid(plot1, plot2, ncol = 2)
+    
 
   }
