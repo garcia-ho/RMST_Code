@@ -646,7 +646,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
     crit_val_res <- foreach(gamma = seq(0, 0.1, by = 0.005), .combine = 'rbind') %dopar%
       {
         tar_prob_int <- exp(-gamma * (int_n / fin_n)) 
-        tar_prob_fin <- exp(-gamma * (fin_n / fin_n)) 
+        tar_prob_fin <- exp(-gamma * (fin_n / fin_n))
         
         #interim
         q1_values <- sapply(m1_values, safe_cal_q, tar_prob = tar_prob_int, mu = mu1, sigma = sigma1)
