@@ -676,7 +676,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
         if (is.null(power)) { # find the most powerful one
               fil_combs <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha &
                                         combinations$alpha < alpha, ]
-              best_gamma <- fil_combs[which.max(fil_combs$power), ]
+              best_gamma <- fil_combs[which.max(fil_combs$q2), ]
             }
         else { 
               best_gamma <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
@@ -693,8 +693,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             return(data.frame(m1 = 0, q1 = 0, m2 = 0, q2 = 0, gamma = 0, 
                               PET0 = 0, PET1 = 0, alpha = 0, power = 0))
           }
-        else {
-            best_res <- crit_val_res[ which(crit_val_res[, 'power'] == max(crit_val_res[, 'power'])), ]
+        else { # most largest q2???
+            best_res <- crit_val_res[ which(crit_val_res[, 'm2'] == max(crit_val_res[, 'm2'])), ]
             return(data.frame(best_res))
           } 
       }
