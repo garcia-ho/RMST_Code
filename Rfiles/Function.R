@@ -562,39 +562,53 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
 
-  cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
-      {
-        mu_D <- mu[1]
-        mu_E <- mu[2]
-        sigma_D <- sqrt(sigma[1, 1])
-        sigma_E <- sqrt(sigma[2, 2])
-        rho <- sigma[1, 2] / (sigma_D * sigma_E) #corr
-        #truncated normal
-        alpha <- (m - mu_D) / sigma_D  
-        # Mean and variance of the truncated normal distribution D | D > m
-        mean_D_given_D_gt_m <- mu_D + sigma_D * dnorm(alpha) / (1 - pnorm(alpha))
-        var_D_given_D_gt_m <- sigma_D^2 * (1 - (alpha * dnorm(alpha) / (1 - pnorm(alpha))) - 
-                                          (dnorm(alpha) / (1 - pnorm(alpha)))^2)
-        # Mean of E given D > m
-        mean_E_given_D_gt_m <- mu_E + rho * (sigma_E / sigma_D) * 
-                              (mean_D_given_D_gt_m - mu_D)
-        # Variance of E given D > m
-        var_E_given_D_gt_m <- (1 - rho^2) * sigma_E^2 + 
-                              (rho * sigma_E / sigma_D)^2 * var_D_given_D_gt_m
-        # Calculate q such that P(E > q | D > m) = p
-        q <- qnorm(tar_prob, mean = mean_E_given_D_gt_m, sd = sqrt(var_E_given_D_gt_m), 
-                    lower.tail = FALSE)
-        if (is.nan(q)) {
-          return(NA)
-          } 
-        else {
-          return(q)
-          }
-      }
+  # cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
+  #     {
+  #       mu_D <- mu[1]
+  #       mu_E <- mu[2]
+  #       sigma_D <- sqrt(sigma[1, 1])
+  #       sigma_E <- sqrt(sigma[2, 2])
+  #       rho <- sigma[1, 2] / (sigma_D * sigma_E) #corr
+  #       #truncated normal
+  #       alpha <- (m - mu_D) / sigma_D  
+  #       # Mean and variance of the truncated normal distribution D | D > m
+  #       mean_D_given_D_gt_m <- mu_D + sigma_D * dnorm(alpha) / (1 - pnorm(alpha))
+  #       var_D_given_D_gt_m <- sigma_D^2 * (1 - (alpha * dnorm(alpha) / (1 - pnorm(alpha))) - 
+  #                                         (dnorm(alpha) / (1 - pnorm(alpha)))^2)
+  #       # Mean of E given D > m
+  #       mean_E_given_D_gt_m <- mu_E + rho * (sigma_E / sigma_D) * 
+  #                             (mean_D_given_D_gt_m - mu_D)
+  #       # Variance of E given D > m
+  #       var_E_given_D_gt_m <- (1 - rho^2) * sigma_E^2 + 
+  #                             (rho * sigma_E / sigma_D)^2 * var_D_given_D_gt_m
+  #       # Calculate q such that P(E > q | D > m) = p
+  #       q <- qnorm(tar_prob, mean = mean_E_given_D_gt_m, sd = sqrt(var_E_given_D_gt_m), 
+  #                   lower.tail = FALSE)
+  #       if (is.nan(q)) {
+  #         return(NA)
+  #         } 
+  #       else {
+  #         return(q)
+  #         }
+  #     }
 
-  safe_cal_q <- function(m, tar_prob, mu, sigma) {
-      suppressWarnings(cal_q(m, tar_prob, mu, sigma))
-    }
+    cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
+      {
+        q_sol <- tryCatch(
+          {
+            uniroot( 
+              function(q) 
+                {
+                  prob <- 1 - pmvnorm(lower = c(m, q), upper = c(Inf, Inf), 
+                                  mean = mu, sigma = sigma)
+                  return(prob - tar_prob)
+                }, interval = c(0, 10))$root
+          }, error = function(e)  # sometimes when m is large, no root
+          {
+            return(NA)
+          })   
+        return(q_sol)
+      }
 
   cal_proc <- function(rmst_int, rmst_fin, m1, q1, m2, q2) {
                        sum((rmst_int[2, ] - rmst_int[1, ] > m1) & (rmst_int[2, ] > q1) &
@@ -605,10 +619,10 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
                           (rmst_int[2, ] < q1)) / sim_size
                       }
 
-  ub_m1 <- quantile(rmst_h1_int[2,] - rmst_h1_int[1, ], 0.7)
-  lb_m1 <- quantile(rmst_h0_int[2,] - rmst_h0_int[1, ], 0.3)
-  ub_m2 <- quantile(rmst_h1_fin[2,] - rmst_h1_fin[1, ], 0.7)
-  lb_m2 <- quantile(rmst_h0_fin[2,] - rmst_h0_fin[1, ], 0.3)
+  ub_m1 <- quantile(rmst_h1_int[2,] - rmst_h1_int[1, ], 0.8)
+  lb_m1 <- quantile(rmst_h0_int[2,] - rmst_h0_int[1, ], 0.2)
+  ub_m2 <- quantile(rmst_h1_fin[2,] - rmst_h1_fin[1, ], 0.8)
+  lb_m2 <- quantile(rmst_h0_fin[2,] - rmst_h0_fin[1, ], 0.2)
   m1_values <- seq(lb_m1, ub_m1, by = (ub_m1 - lb_m1) / 100) 
   m2_values <- seq(lb_m2, ub_m2, by = (ub_m2 - lb_m2) / 100)
 
@@ -636,7 +650,8 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             }
     else { 
       crit_val_res <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-                                combinations$alpha < alpha & (combinations$power > power), ]
+                                  combinations$alpha < alpha & combinations$power > power
+                                  & abs(combinations$power - power) < 0.05 * power, ]
             }
   }
 
@@ -648,13 +663,13 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
         tar_prob_int <- exp(-gamma * (int_n / fin_n)) 
         tar_prob_fin <- exp(-gamma * (fin_n / fin_n))
         
-        #interim
-        q1_values <- sapply(m1_values, safe_cal_q, tar_prob = tar_prob_int, mu = mu1, sigma = sigma1)
+        # interim
+        q1_values <- sapply(m1_values, cal_q, tar_prob = tar_prob_int, mu = mu1, sigma = sigma1)
         mq1 <- data.frame(m1_values = m1_values, q1_values = q1_values)
         mq1 <- data.frame(mq1[!is.na(mq1[,2]),])
           
-        # #final
-        q2_values <- sapply(m2_values, safe_cal_q, tar_prob = tar_prob_fin, mu = mu2, sigma = sigma2)
+        # final
+        q2_values <- sapply(m2_values, cal_q, tar_prob = tar_prob_fin, mu = mu2, sigma = sigma2)
         mq2 <- data.frame(m2_values = m2_values, q2_values = q2_values)
         mq2 <- data.frame(mq2[!is.na(mq2[,2]),])
 
@@ -680,7 +695,9 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             }
         else { 
               best_gamma <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-                                        combinations$alpha < alpha & (combinations$power > power), ]
+                                        combinations$alpha < alpha & combinations$power > power
+                                        & abs(combinations$power - power) < 0.05 * power, ]
+              #best_gamma <- best_gamma[which.max(best_gamma$q2), ]                      
             }
         best_gamma
       }   
@@ -693,13 +710,13 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             return(data.frame(m1 = 0, q1 = 0, m2 = 0, q2 = 0, gamma = 0, 
                               PET0 = 0, PET1 = 0, alpha = 0, power = 0))
           }
-        else { # most largest q2???
-            best_res <- crit_val_res[ which(crit_val_res[, 'm2'] == max(crit_val_res[, 'm2'])), ]
+        else { # largest q2
+            best_res <- crit_val_res[ which(crit_val_res[, 'power'] == max(crit_val_res[, 'power'])), ]
             return(data.frame(best_res))
           } 
       }
 
-    else # find the min E(N)|H0 critical values
+    else 
       {   
         if (dim(crit_val_res)[1] == 0) 
           {   # Return NULL when something goes wrong
