@@ -63,6 +63,9 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
             best_our <- adp_grid_src(rmst_data = rmst_data, mu_cov_h0 = mu_cov_h0, mu_cov_h1 = mu_cov_h1, 
                             int_n = interim * r, fin_n = N, sim_size = sim_size, method = method,
                             alpha = alpha, power = power)
+            if (method == 'Complex'){
+                best_our <- best_our[which.min(fil_combs$power), ]
+            }
         }
 
         else if (method == 'logrank')   # search the min(E(N)) using log rank test
@@ -119,7 +122,7 @@ get_opt_des <- function(n, sim_size, acc_time, cen_time, int_step, method, lambd
                         power = 0, PET = 0, EN0 = NA, EN1 = NA, EN = NA, interim_n = NA))
         }
         else{
-             return(data.frame(m1 = 0, q1 = 0, m2 = 0, q2 = 0, gamma = 0, 
+             return(data.frame(m1 = 0, q1 = 0, m2 = 0, q2 = 0, lambda = 0, gamma = 0, 
                         PET0 = 0, PET1 = 0, alpha = 0, power = 0, 
                         PET = 0, EN0 = NA, EN1 = NA, EN = NA, interim_n = NA))
         }

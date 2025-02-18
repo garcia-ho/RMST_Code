@@ -453,10 +453,10 @@ find_m_logrank <- function(logrank_data, corr_h0, search_times, int_n = NULL,
   cal_pet <- function(lr_int, m1){
                       sum(lr_int <= m1) / sim_size
                       }
-  ub_m1 <- quantile(z_stats_h1_int, 0.7)
-  lb_m1 <- quantile(z_stats_h0_int, 0.3)
-  ub_m2 <- quantile(z_stats_h1_fin, 0.7)
-  lb_m2 <- quantile(z_stats_h0_fin, 0.3)
+  ub_m1 <- quantile(z_stats_h1_int, 0.8)
+  lb_m1 <- quantile(z_stats_h0_int, 0.2)
+  ub_m2 <- quantile(z_stats_h1_fin, 0.8)
+  lb_m2 <- quantile(z_stats_h0_fin, 0.2)
   m1_values <- seq(lb_m1, ub_m1, by = (ub_m1 - lb_m1) / search_times) 
   m2_values <- seq(lb_m2, ub_m2, by = (ub_m2 - lb_m2) / search_times)
   combinations <- expand.grid(m1 = m1_values, m2 = m2_values)
@@ -599,7 +599,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             uniroot( 
               function(q) 
                 {
-                  prob <- 1 - pmvnorm(lower = c(m, q), upper = c(Inf, Inf), 
+                  prob <- pmvnorm(lower = c(m, q), upper = c(Inf, Inf), 
                                   mean = mu, sigma = sigma)
                   return(prob - tar_prob)
                 }, interval = c(0, 10))$root
@@ -615,8 +615,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
                             (rmst_fin[2, ] - rmst_fin[1, ] > m2) & (rmst_fin[2, ] > q2)) / sim_size
                       }
   cal_pet <- function(rmst_int, m1, q1){
-                      sum((rmst_int[2, ] - rmst_int[1, ] < m1) | 
-                          (rmst_int[2, ] < q1)) / sim_size
+                      sum((rmst_int[2, ] - rmst_int[1, ] < m1) | (rmst_int[2, ] < q1)) / sim_size
                       }
 
   ub_m1 <- quantile(rmst_h1_int[2,] - rmst_h1_int[1, ], 0.8)
@@ -633,6 +632,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
     combinations$q1 <- -Inf
     combinations$q2 <- -Inf
     combinations$gamma <- 0
+    combinations$lambda <- 0
     combinations$PET0 <- sapply(1:nrow(combinations), function(i) {
                               cal_pet(rmst_h0_int, combinations$m1[i], -Inf)})
     combinations$PET1 <- sapply(1:nrow(combinations), function(i) {
@@ -650,18 +650,18 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             }
     else { 
       crit_val_res <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-                                  combinations$alpha < alpha & combinations$power > power
-                                  & abs(combinations$power - power) < 0.05 * power, ]
+                                  combinations$alpha < alpha & combinations$power > power, ]
             }
   }
 
   # D1>m1, E1>q1, D2>m2, E2>q2
   if (method == 'Complex') 
   {
-    crit_val_res <- foreach(gamma = seq(0, 0.1, by = 0.005), .combine = 'rbind') %dopar%
-      {
-        tar_prob_int <- exp(-gamma * (int_n / fin_n)) 
-        tar_prob_fin <- exp(-gamma * (fin_n / fin_n))
+    crit_val_res <- foreach(lambda = seq(0, 0.3, by = 0.001), .combine = 'rbind') %:%
+                foreach(gamma = seq(0.01, 0.1, by = 0.01), .combine = 'rbind') %dopar% {
+
+        tar_prob_int <- exp(-lambda * (int_n / fin_n) ^ gamma) 
+        tar_prob_fin <- exp(-lambda * (fin_n / fin_n) ^ gamma)
         
         # interim
         q1_values <- sapply(m1_values, cal_q, tar_prob = tar_prob_int, mu = mu1, sigma = sigma1)
@@ -673,10 +673,16 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
         mq2 <- data.frame(m2_values = m2_values, q2_values = q2_values)
         mq2 <- data.frame(mq2[!is.na(mq2[,2]),])
 
+        # for some gamma, no solution for q1 or q2
+        if (nrow(mq1) == 0 | nrow(mq2) == 0) {
+          return(NULL)
+        }
+
         combinations <- expand.grid(m1 = mq1$m1_values, m2 = mq2$m2_values)
         combinations$q1 <- mq1$q1_values[match(combinations$m1, mq1$m1_values)]
         combinations$q2 <- mq2$q2_values[match(combinations$m2, mq2$m2_values)]
         combinations$gamma <- gamma
+        combinations$lambda <- lambda
         combinations$PET0 <- sapply(1:nrow(combinations), function(i) {
                                     cal_pet(rmst_h0_int, combinations$m1[i], combinations$q1[i])})
         combinations$PET1 <- sapply(1:nrow(combinations), function(i) {
@@ -691,13 +697,13 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
         if (is.null(power)) { # find the most powerful one
               fil_combs <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha &
                                         combinations$alpha < alpha, ]
-              best_gamma <- fil_combs[which.max(fil_combs$q2), ]
+              best_gamma <- fil_combs[which.max(fil_combs$power), ]
             }
         else { 
               best_gamma <- combinations[abs(combinations$alpha - alpha) < 0.05 * alpha & 
-                                        combinations$alpha < alpha & combinations$power > power
-                                        & abs(combinations$power - power) < 0.05 * power, ]
-              #best_gamma <- best_gamma[which.max(best_gamma$q2), ]                      
+                                        combinations$alpha < alpha & combinations$power > power, ]
+                                # least powerful for robustness
+             best_gamma <- best_gamma[which.min(best_gamma$power), ]                      
             }
         best_gamma
       }   
@@ -710,7 +716,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
             return(data.frame(m1 = 0, q1 = 0, m2 = 0, q2 = 0, gamma = 0, 
                               PET0 = 0, PET1 = 0, alpha = 0, power = 0))
           }
-        else { # largest q2
+        else { 
             best_res <- crit_val_res[ which(crit_val_res[, 'power'] == max(crit_val_res[, 'power'])), ]
             return(data.frame(best_res))
           } 
