@@ -562,53 +562,53 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
       rmst_h0_fin <- rmst_data[c(5,6) , ]
       rmst_h1_fin <- rmst_data[c(7,8) , ]
 
-  # cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
-  #     {
-  #       mu_D <- mu[1]
-  #       mu_E <- mu[2]
-  #       sigma_D <- sqrt(sigma[1, 1])
-  #       sigma_E <- sqrt(sigma[2, 2])
-  #       rho <- sigma[1, 2] / (sigma_D * sigma_E) #corr
-  #       #truncated normal
-  #       alpha <- (m - mu_D) / sigma_D  
-  #       # Mean and variance of the truncated normal distribution D | D > m
-  #       mean_D_given_D_gt_m <- mu_D + sigma_D * dnorm(alpha) / (1 - pnorm(alpha))
-  #       var_D_given_D_gt_m <- sigma_D^2 * (1 - (alpha * dnorm(alpha) / (1 - pnorm(alpha))) - 
-  #                                         (dnorm(alpha) / (1 - pnorm(alpha)))^2)
-  #       # Mean of E given D > m
-  #       mean_E_given_D_gt_m <- mu_E + rho * (sigma_E / sigma_D) * 
-  #                             (mean_D_given_D_gt_m - mu_D)
-  #       # Variance of E given D > m
-  #       var_E_given_D_gt_m <- (1 - rho^2) * sigma_E^2 + 
-  #                             (rho * sigma_E / sigma_D)^2 * var_D_given_D_gt_m
-  #       # Calculate q such that P(E > q | D > m) = p
-  #       q <- qnorm(tar_prob, mean = mean_E_given_D_gt_m, sd = sqrt(var_E_given_D_gt_m), 
-  #                   lower.tail = FALSE)
-  #       if (is.nan(q)) {
-  #         return(NA)
-  #         } 
-  #       else {
-  #         return(q)
-  #         }
-  #     }
-
-    cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
+  cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
       {
-        q_sol <- tryCatch(
-          {
-            uniroot( 
-              function(q) 
-                {
-                  prob <- pmvnorm(lower = c(m, q), upper = c(Inf, Inf), 
-                                  mean = mu, sigma = sigma)
-                  return(prob - tar_prob)
-                }, interval = c(0, 10))$root
-          }, error = function(e)  # sometimes when m is large, no root
-          {
-            return(NA)
-          })   
-        return(q_sol)
+        mu_D <- mu[1]
+        mu_E <- mu[2]
+        sigma_D <- sqrt(sigma[1, 1])
+        sigma_E <- sqrt(sigma[2, 2])
+        rho <- sigma[1, 2] / (sigma_D * sigma_E) #corr
+        #truncated normal
+        alpha <- (m - mu_D) / sigma_D  
+        # Mean and variance of the truncated normal distribution D | D > m
+        mean_D_given_D_gt_m <- mu_D + sigma_D * dnorm(alpha) / (1 - pnorm(alpha))
+        var_D_given_D_gt_m <- sigma_D^2 * (1 - (alpha * dnorm(alpha) / (1 - pnorm(alpha))) - 
+                                          (dnorm(alpha) / (1 - pnorm(alpha)))^2)
+        # Mean of E given D > m
+        mean_E_given_D_gt_m <- mu_E + rho * (sigma_E / sigma_D) * 
+                              (mean_D_given_D_gt_m - mu_D)
+        # Variance of E given D > m
+        var_E_given_D_gt_m <- (1 - rho^2) * sigma_E^2 + 
+                              (rho * sigma_E / sigma_D)^2 * var_D_given_D_gt_m
+        # Calculate q such that P(E > q | D > m) = p
+        q <- qnorm(tar_prob, mean = mean_E_given_D_gt_m, sd = sqrt(var_E_given_D_gt_m), 
+                    lower.tail = FALSE)
+        if (is.nan(q)) {
+          return(NA)
+          } 
+        else {
+          return(q)
+          }
       }
+
+    # cal_q <- function(m, tar_prob, mu, sigma)  # conditional normal dist
+    #   {
+    #     q_sol <- tryCatch(
+    #       {
+    #         uniroot( 
+    #           function(q) 
+    #             {
+    #               prob <- pmvnorm(lower = c(m, q), upper = c(Inf, Inf), 
+    #                               mean = mu, sigma = sigma)
+    #               return(prob - tar_prob)
+    #             }, interval = c(0, 10))$root
+    #       }, error = function(e)  # sometimes when m is large, no root
+    #       {
+    #         return(NA)
+    #       })   
+    #     return(q_sol)
+    #   }
 
   cal_proc <- function(rmst_int, rmst_fin, m1, q1, m2, q2) {
                        sum((rmst_int[2, ] - rmst_int[1, ] > m1) & (rmst_int[2, ] > q1) &
@@ -657,7 +657,7 @@ adp_grid_src <- function(rmst_data, mu_cov_h0, mu_cov_h1, int_n, fin_n,
   # D1>m1, E1>q1, D2>m2, E2>q2
   if (method == 'Complex') 
   {
-    crit_val_res <- foreach(lambda = seq(0, 0.3, by = 0.001), .combine = 'rbind') %:%
+    crit_val_res <- foreach(lambda = seq(0, 0.1, by = 0.005), .combine = 'rbind') %:%
                 foreach(gamma = seq(0.01, 0.1, by = 0.01), .combine = 'rbind') %dopar% {
 
         tar_prob_int <- exp(-lambda * (int_n / fin_n) ^ gamma) 
